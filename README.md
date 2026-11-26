@@ -50,7 +50,7 @@ node skills/make-game/scripts/validate_game.mjs examples/fruit-catch/index.html 
 | 部件 | 位置 | 形态 | 职责 |
 |---|---|---|---|
 | 规格补全协议 | `skills/make-game/SKILL.md` | 指令 | 最多两轮追问，每轮给选项；输出"我理解你要的是…"和三条验收标准 |
-| 惯例库 | `skills/make-game/data/conventions.json` | 数据 | H5 小游戏这一品类的默认值：竖屏、30 秒到 2 分钟、点按操作、无外部依赖…… |
+| 惯例库 | `skills/make-game/data/conventions.json` | 数据 | H5 小游戏这一品类的默认值：竖屏、30 秒到 2 分钟、点按操作、无外部依赖……以及两块用户不知道该要求的：**视觉标准**（禁 emoji 主角、配色预设、字号圆角动效）和**留存钩子**（连击、稀有目标、阶段变化、历史最佳、打击感） |
 | 验收器 | `skills/make-game/scripts/validate_game.mjs` | 脚本 | 单文件、语法、契约标记、禁止弹窗；`--browser` 模式下真实打开页面检查报错、溢出、开始/计分/重开，并留两张截图 |
 | 浏览器环境 | `skills/make-game/scripts/setup_browser.sh` | 脚本 | 一键把 playwright + Chromium 装到 `~/.saymake/`，不污染 skill 目录 |
 | 补丁器 | `skills/make-game/scripts/patch_css.mjs` | 脚本 | 把"这块大一点"写成可追溯、可清除的样式覆盖，不碰其余部分 |
@@ -69,9 +69,9 @@ node skills/make-game/scripts/validate_game.mjs examples/fruit-catch/index.html 
 
 - [x] v0.1 — H5 小游戏单一品类：规格协议 + 惯例库 + 静态验收器 + 样式补丁器
 - [x] 真实浏览器验收（Playwright），一键安装，两张截图作为验收证据
-- [ ] v0.2 — 逻辑修改的补丁协议；用户偏好记忆；第一个外部用户试玩
-- [ ] v0.3 — 第二个品类（落地页 / 小工具）
-- [ ] 之后 — 把验收器、补丁器抽成可选的 MCP server，适配更多宿主
+- [x] v0.2 — 可执行的视觉标准（禁 emoji 主角、配色预设、字体/圆角/动效）+ 留存钩子清单 + 截图自检；协议支持"太丑/不好玩"这类整体反馈
+- [ ] v0.3 — 逻辑修改的补丁协议；用户偏好记忆；第一个外部用户试玩
+- [ ] 之后 — 第二个品类（落地页 / 小工具）；把验收器、补丁器抽成可选的 MCP server
 
 ## Dogfood 日志
 
