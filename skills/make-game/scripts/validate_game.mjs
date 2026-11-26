@@ -9,12 +9,26 @@
 // 原则：不要相信模型说"我做完了"。一律跑这里。
 
 import { readFileSync, statSync, mkdirSync } from 'node:fs';
-import { resolve, dirname, basename } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve, dirname, basename, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { homedir } from 'node:os';
 import vm from 'node:vm';
 
 const SKILL_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CONVENTIONS = JSON.parse(readFileSync(resolve(SKILL_DIR, 'data/conventions.json'), 'utf8'));
+
+// playwright 的两个落点：仓库本地 node_modules，或用户级 ~/.saymake（由 scripts/setup_browser.sh 安装）。
+// 不装进 skill 目录，避免把几百 MB 的 node_modules 复制进宿主。
+async function loadPlaywright() {
+  const candidates = [
+    () => import('playwright'),
+    () => import(pathToFileURL(join(homedir(), '.saymake', 'node_modules', 'playwright', 'index.mjs')).href),
+  ];
+  for (const load of candidates) {
+    try { return await load(); } catch { /* 下一个 */ }
+  }
+  return null;
+}
 
 const args = process.argv.slice(2);
 const flags = new Set(args.filter((a) => a.startsWith('--')));
@@ -83,13 +97,10 @@ add('size', kb < 300, `${kb.toFixed(1)} KB`);
 // ---------- 浏览器检查（可选） ----------
 
 if (useBrowser) {
-  let pw = null;
-  try {
-    pw = await import('playwright');
-  } catch {
-    add('browser:available', false, '未安装 playwright，跳过真实浏览器检查。安装: npm i -D playwright && npx playwright install chromium');
-  }
-  if (pw) {
+  const pw = await loadPlaywright();
+  if (!pw) {
+    add('browser:available', false, '未安装 playwright，跳过真实浏览器检查。一条命令安装: bash scripts/setup_browser.sh');
+  } else {
     const outDir = resolve(dirname(gamePath), '.saymake');
     mkdirSync(outDir, { recursive: true });
     const browser = await pw.chromium.launch();
@@ -99,6 +110,9 @@ if (useBrowser) {
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
     await page.goto('file://' + gamePath);
     await page.waitForTimeout(300);
+    const shotBase = resolve(outDir, basename(gamePath).replace(/\.html?$/i, ''));
+    await page.screenshot({ path: `${shotBase}.start.png` });
+    results.push({ id: 'browser:screenshot', ok: true, msg: `${shotBase}.start.png`, info: true });
 
     add('browser:no-errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 
@@ -120,16 +134,17 @@ if (useBrowser) {
     const restarted = await page.evaluate(() => { try { window.__sm.restart(); return window.__sm.isRunning(); } catch (e) { return 'ERR: ' + e.message; } });
     add('browser:restart', restarted === true, restarted === true ? '' : `restart() 后状态: ${restarted}`);
 
-    const shot = resolve(outDir, `${basename(gamePath).replace(/\.html?$/i, '')}.png`);
-    await page.screenshot({ path: shot });
+    // 等一秒多让游戏跑起来，截图里才有东西
+    await page.waitForTimeout(1300);
+    await page.screenshot({ path: `${shotBase}.play.png` });
     await browser.close();
-    results.push({ id: 'browser:screenshot', ok: true, msg: shot, info: true });
+    results.push({ id: 'browser:screenshot', ok: true, msg: `${shotBase}.play.png`, info: true });
   }
 }
 
 // ---------- 输出 ----------
 
-const passed = results.filter((r) => r.ok).length;
+const passed = results.filter((r) => r.ok && !r.info).length;
 const failed = results.filter((r) => !r.ok);
 const summary = { file: gamePath, passed, total: results.filter((r) => !r.info).length, ok: failed.length === 0 };
 

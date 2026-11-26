@@ -25,18 +25,23 @@ SayMake 的做法是把提示词工程从用户侧搬到系统侧：
 ```bash
 git clone https://github.com/pengyicai203-gif/saymake
 cd saymake
-node skills/make-game/scripts/validate_game.mjs examples/tap-the-dot/index.html
+
+# 1. （可选，推荐）装真实浏览器验收环境，装到 ~/.saymake/，不碰仓库
+bash skills/make-game/scripts/setup_browser.sh
+
+# 2. 跑验收器
+node skills/make-game/scripts/validate_game.mjs examples/fruit-catch/index.html --browser
 ```
 
-你会看到一份通过/不通过清单。把 `examples/tap-the-dot/index.html` 在浏览器里打开，就是一个能玩的点泡泡小游戏——它也是验收器的测试样本。
+你会看到一份通过/不通过清单，以及 `examples/fruit-catch/.saymake/` 下两张截图：开始页和运行中的画面。把 `examples/fruit-catch/index.html` 在浏览器里打开，就是一个能玩的接水果小游戏——它和 `examples/tap-the-dot/` 一样，也是验收器的测试样本。
 
 ## 装到你的 AI 工具里
 
-把 `skills/make-game` 整个目录复制到你 AI 工具的 skills 目录（不同工具位置不同，常见的是用户目录或工作区下的 `.skills/`）。然后对它说：
+把 `skills/make-game` 整个目录复制到你 AI 工具的 skills 目录（不同工具位置不同，常见的是用户目录或工作区下的 `.skills/`）。**装完重开一个对话**，skill 列表是在会话启动时加载的。然后对它说：
 
-> 我想做一个点泡泡的小游戏，手机上玩。
+> 我想做一个接水果的小游戏，手机上玩。
 
-它会先确认两三个关键问题，然后生成游戏、自动验收、告诉你在哪、怎么打开、还能怎么改。
+它会先复述一遍它理解的需求（最多追问两轮），然后生成游戏、自动验收、给你看截图、告诉你在哪、还能怎么改。
 
 ## 它怎么工作
 
@@ -46,7 +51,8 @@ node skills/make-game/scripts/validate_game.mjs examples/tap-the-dot/index.html
 |---|---|---|---|
 | 规格补全协议 | `skills/make-game/SKILL.md` | 指令 | 最多两轮追问，每轮给选项；输出"我理解你要的是…"和三条验收标准 |
 | 惯例库 | `skills/make-game/data/conventions.json` | 数据 | H5 小游戏这一品类的默认值：竖屏、30 秒到 2 分钟、点按操作、无外部依赖…… |
-| 验收器 | `skills/make-game/scripts/validate_game.mjs` | 脚本 | 单文件、语法、契约标记、禁止弹窗；`--browser` 模式下真实打开页面检查报错、溢出、开始/计分/重开 |
+| 验收器 | `skills/make-game/scripts/validate_game.mjs` | 脚本 | 单文件、语法、契约标记、禁止弹窗；`--browser` 模式下真实打开页面检查报错、溢出、开始/计分/重开，并留两张截图 |
+| 浏览器环境 | `skills/make-game/scripts/setup_browser.sh` | 脚本 | 一键把 playwright + Chromium 装到 `~/.saymake/`，不污染 skill 目录 |
 | 补丁器 | `skills/make-game/scripts/patch_css.mjs` | 脚本 | 把"这块大一点"写成可追溯、可清除的样式覆盖，不碰其余部分 |
 
 生成器和验收器之间有一份**契约**（见 `conventions.json` 的 `contract` 字段）：游戏必须带 `data-sm="start|score|restart"` 标记，并暴露 `window.__sm.start()/getScore()/restart()/isRunning()`。有了契约，验收才是确定性的，修改才能落到具体位置。
@@ -62,9 +68,14 @@ node skills/make-game/scripts/validate_game.mjs examples/tap-the-dot/index.html
 ## 路线图
 
 - [x] v0.1 — H5 小游戏单一品类：规格协议 + 惯例库 + 静态验收器 + 样式补丁器
-- [ ] v0.2 — 真实浏览器验收（Playwright）默认开启；逻辑修改的补丁协议；用户偏好记忆
+- [x] 真实浏览器验收（Playwright），一键安装，两张截图作为验收证据
+- [ ] v0.2 — 逻辑修改的补丁协议；用户偏好记忆；第一个外部用户试玩
 - [ ] v0.3 — 第二个品类（落地页 / 小工具）
 - [ ] 之后 — 把验收器、补丁器抽成可选的 MCP server，适配更多宿主
+
+## Dogfood 日志
+
+每次用 SayMake 从一句话做出一个东西，卡在哪里、改了什么，都记在 [`docs/dogfood-log.md`](docs/dogfood-log.md)。第一轮（接水果）的记录在那里。
 
 ## 非目标
 
