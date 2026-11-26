@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <!--
-  SayMake 示例：接水果（v2，按 conventions v0.2.0 重做）
-  用户当时说的那句话："做一个在手机上玩的水果接取小游戏。"
-  用户第一版反馈："审美过时""吸引力不足" → 本版：SVG 主角、现代配色、6 个留存钩子。
+  SayMake 示例：接水果（v3，方向：写实清爽 realistic-clean）
+  用户原话："做一个在手机上玩的水果接取小游戏。"
+  用户第三轮回答："我想要的感觉是更真实：背景色彩更简单，水果和篮子更真实。
+                   玩完一局，想看到分数破纪录、放松解压、和朋友间比一比。"
   三段结构：样式区 / 结构区 / 逻辑区。修改时只动对应区块。
   契约：data-sm="start|score|restart"，window.__sm = { start, restart, getScore, isRunning }
 -->
@@ -12,16 +13,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>接水果</title>
 <style>
-  /* ========== 样式区（预设：糖果明亮） ========== */
+  /* ========== 样式区（realistic-clean：一色背景，真实感的物体） ========== */
   :root {
-    --bg: linear-gradient(180deg, #FFF6EA 0%, #FFE3EC 100%);
-    --accent: #FF5C8A;
-    --accent2: #FFB627;
-    --ink: #2B2140;
-    --ink-soft: rgba(43, 33, 64, .55);
-    --panel: rgba(255, 255, 255, .72);
-    --danger: #E5304F;
-    --ease: cubic-bezier(.2, .9, .3, 1.2);
+    --bg: linear-gradient(180deg, #F7F2EA 0%, #ECE4D6 100%);
+    --ink: #2A2520;
+    --ink-soft: rgba(42, 37, 32, .55);
+    --accent: #E0533D;
+    --accent2: #F2B33D;
+    --panel: rgba(255, 255, 255, .82);
+    --danger: #C8372D;
+    --ease: cubic-bezier(.2, .9, .3, 1.15);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; }
@@ -32,50 +33,41 @@
   }
   #app { position: relative; height: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; }
 
-  /* 顶部：胶囊信息卡 */
   .hud { display: flex; justify-content: space-between; gap: 8px; padding: 14px 16px 8px; z-index: 2; }
   .pill {
     flex: 1; text-align: center;
     background: var(--panel); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border-radius: 22px; padding: 8px 12px 10px; font-weight: 800; font-size: 28px; line-height: 1.1;
-    font-variant-numeric: tabular-nums; box-shadow: 0 8px 24px rgba(43, 33, 64, .08);
+    border-radius: 20px; padding: 8px 12px 10px; font-weight: 800; font-size: 28px; line-height: 1.1;
+    font-variant-numeric: tabular-nums; box-shadow: 0 8px 24px rgba(42, 37, 32, .10);
     transition: transform .2s var(--ease);
   }
   .pill small { display: block; font-size: 11px; font-weight: 700; color: var(--ink-soft); letter-spacing: .06em; margin-bottom: 2px; }
   .pill.bump { transform: scale(1.1); }
   .pill.combo.hot { background: var(--accent); color: #fff; }
   .pill.combo.hot small { color: rgba(255,255,255,.8); }
-  .combo-track { height: 4px; margin: 0 16px; border-radius: 2px; background: rgba(43,33,64,.08); overflow: hidden; }
+  .combo-track { height: 4px; margin: 0 16px; border-radius: 2px; background: rgba(42,37,32,.08); overflow: hidden; }
   .combo-track i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 2px; transition: width .25s var(--ease); }
 
-  /* 场地 */
-  #board { position: relative; flex: 1; overflow: hidden; --b1: #FFC1D4; --b2: #FFE29A; --b3: #B9F0DC; }
-  #board[data-phase="1"] { --b1: #FFB3A0; --b2: #FFF0A6; --b3: #A8E6FF; }
-  #board[data-phase="2"] { --b1: #F5A0C8; --b2: #FFD37A; --b3: #9FD8FF; }
-  #board[data-phase="3"] { --b1: #C9A7FF; --b2: #FFB38A; --b3: #8FE3D0; }
-  .blob { position: absolute; border-radius: 50%; filter: blur(48px); opacity: .8; transition: background 1.2s; pointer-events: none; }
-  .b1 { width: 260px; height: 260px; right: -60px; top: -40px; background: var(--b1); }
-  .b2 { width: 220px; height: 220px; left: -70px; top: 38%; background: var(--b2); }
-  .b3 { width: 260px; height: 260px; right: -40px; bottom: -80px; background: var(--b3); }
+  #board { position: relative; flex: 1; overflow: hidden; }
+  #board::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 80% at 50% 40%, transparent 60%, rgba(42,37,32,.06) 100%); }
   #board.shake { animation: shake .3s; }
-  @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-8px) } 75% { transform: translateX(8px) } }
+  @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
   #flash { position: absolute; inset: 0; background: var(--danger); opacity: 0; pointer-events: none; }
   #flash.on { animation: flash .3s; }
-  @keyframes flash { from { opacity: .3 } to { opacity: 0 } }
+  @keyframes flash { from { opacity: .22 } to { opacity: 0 } }
 
-  /* 主角与道具 */
   .fruit, #basket { position: absolute; left: 0; top: 0; line-height: 0; will-change: transform; pointer-events: none; }
   .fruit svg, #basket svg { display: block; }
-  #basket { filter: drop-shadow(0 10px 10px rgba(43, 33, 64, .18)); }
-  .golden svg { filter: drop-shadow(0 0 8px #FFD54A) drop-shadow(0 0 16px rgba(255, 212, 74, .6)); }
-  .spark { animation: sparkle .35s infinite alternate; transform-origin: center; }
-  @keyframes sparkle { from { opacity: .5; transform: scale(.7) } to { opacity: 1; transform: scale(1.3) } }
+  .fruit { filter: drop-shadow(0 8px 6px rgba(42, 37, 32, .22)); }
+  #basket { filter: drop-shadow(0 12px 10px rgba(42, 37, 32, .22)); }
+  .golden svg { filter: drop-shadow(0 0 6px rgba(242, 179, 61, .9)) drop-shadow(0 8px 6px rgba(42,37,32,.22)); }
+  .spark { animation: sparkle .3s infinite alternate; transform-origin: center; }
+  @keyframes sparkle { from { opacity: .6; transform: scale(.7) } to { opacity: 1; transform: scale(1.3) } }
 
-  /* 反馈 */
-  .p { position: absolute; width: 10px; height: 10px; border-radius: 50%; pointer-events: none; }
+  .p { position: absolute; width: 9px; height: 9px; border-radius: 50%; pointer-events: none; }
   .float {
     position: absolute; font-weight: 800; font-size: 24px; color: var(--accent); pointer-events: none;
-    text-shadow: 0 2px 0 #fff; animation: rise .6s var(--ease) forwards; white-space: nowrap;
+    text-shadow: 0 1px 0 #fff; animation: rise .6s var(--ease) forwards; white-space: nowrap;
   }
   .float.bad { color: var(--danger); }
   .float.miss { color: var(--ink-soft); font-size: 16px; }
@@ -86,52 +78,61 @@
     pointer-events: none; opacity: 0; z-index: 2;
   }
 
-  /* 结算 / 开始：居中卡片 */
   .overlay {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    padding: 24px; z-index: 3; background: rgba(255, 255, 255, .35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    padding: 24px; z-index: 3; background: rgba(247, 242, 234, .55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   }
   .card {
-    width: 100%; max-width: 340px; background: #fff; border-radius: 28px; padding: 32px 28px 28px;
-    text-align: center; box-shadow: 0 20px 60px rgba(43, 33, 64, .18);
+    width: 100%; max-width: 340px; background: #fff; border-radius: 24px; padding: 30px 26px 24px;
+    text-align: center; box-shadow: 0 24px 60px rgba(42, 37, 32, .16);
     animation: cardIn .35s var(--ease);
   }
-  @keyframes cardIn { from { transform: scale(.9) translateY(12px); opacity: 0 } to { transform: none; opacity: 1 } }
+  @keyframes cardIn { from { transform: scale(.92) translateY(12px); opacity: 0 } to { transform: none; opacity: 1 } }
   .card h1 { font-size: 40px; font-weight: 800; letter-spacing: -.02em; }
   .card .lead { font-size: 16px; font-weight: 500; line-height: 1.6; color: var(--ink-soft); margin-top: 10px; }
   .card .lead b { color: var(--ink); }
-  .card .big { font-size: 64px; font-weight: 800; color: var(--accent); line-height: 1; margin: 16px 0 4px; font-variant-numeric: tabular-nums; }
+  .card .big { font-size: 64px; font-weight: 800; color: var(--accent); line-height: 1; margin: 14px 0 4px; font-variant-numeric: tabular-nums; }
   .card .title { font-size: 22px; font-weight: 800; }
-  .card .stats { display: flex; justify-content: center; gap: 28px; margin: 14px 0 18px; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+  .card .stats { display: flex; justify-content: center; gap: 28px; margin: 12px 0 16px; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
   .card .stats b { display: block; font-size: 22px; color: var(--ink); margin-top: 2px; }
+  .vs { display: flex; justify-content: center; align-items: center; gap: 18px; margin: 18px 0 8px; }
+  .vs .side { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+  .vs .side b { display: block; font-size: 40px; color: var(--ink); margin-top: 2px; }
+  .vs .side.win b { color: var(--accent); }
+  .vs .tag { font-size: 13px; font-weight: 800; color: var(--ink-soft); }
   .btn {
     display: block; width: 100%; height: 58px; border: 0; border-radius: 999px;
     background: var(--accent); color: #fff; font-size: 20px; font-weight: 800; cursor: pointer;
-    box-shadow: 0 10px 24px rgba(255, 92, 138, .35); font-family: inherit;
-    transition: transform .15s var(--ease), box-shadow .15s;
+    box-shadow: 0 10px 24px rgba(224, 83, 61, .3); font-family: inherit;
+    transition: transform .15s var(--ease), box-shadow .15s; margin-top: 10px;
   }
-  .btn:active { transform: scale(.96); box-shadow: 0 4px 12px rgba(255, 92, 138, .3); }
+  .btn:active { transform: scale(.96); box-shadow: 0 4px 12px rgba(224, 83, 61, .28); }
+  .btn.ghost { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 2px rgba(42,37,32,.12); height: 52px; font-size: 17px; }
+  .btn.ghost:active { box-shadow: inset 0 0 0 2px rgba(42,37,32,.12); }
   .badge {
-    display: inline-block; padding: 6px 14px; border-radius: 999px; margin-bottom: 16px;
+    display: inline-block; padding: 6px 14px; border-radius: 999px; margin-bottom: 6px;
     background: var(--accent2); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .04em;
     animation: pop .4s var(--ease);
   }
   @keyframes pop { from { transform: scale(.4); opacity: 0 } to { transform: none; opacity: 1 } }
   .best-line { margin-top: 14px; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+  .share-box {
+    margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: rgba(42,37,32,.05);
+    font-size: 13px; font-weight: 600; color: var(--ink-soft); text-align: left; user-select: text; -webkit-user-select: text;
+  }
   .hidden { display: none !important; }
 </style>
 </head>
 <body>
 <div id="app">
   <div class="hud">
-    <div class="pill" id="scorePill"><small>得分</small><span id="score" data-sm="score">0</span></div>
+    <div class="pill" id="scorePill"><small id="scoreLabel">得分</small><span id="score" data-sm="score">0</span></div>
     <div class="pill combo" id="comboPill"><small>连击</small><span id="comboVal">x1</span></div>
     <div class="pill"><small>时间</small><span id="timer">60</span></div>
   </div>
   <div class="combo-track"><i id="comboFill"></i></div>
 
-  <div id="board" data-phase="0">
-    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div id="board">
     <div id="flash"></div>
     <div id="basket" aria-hidden="true"></div>
     <div class="toast" id="toast">加速！</div>
@@ -141,7 +142,16 @@
         <h1>接水果</h1>
         <p class="lead">手指左右滑动，接住掉下来的水果。<br><b>连着接住</b>会翻倍，<b>炸弹</b>别碰。</p>
         <p class="best-line hidden" id="startBest"></p>
-        <p style="margin-top:22px"><button class="btn" id="startBtn" data-sm="start">开始</button></p>
+        <button class="btn" id="startBtn" data-sm="start">开始</button>
+        <button class="btn ghost" id="versusBtn">和朋友比一比</button>
+      </div>
+    </div>
+
+    <div id="prepScreen" class="overlay hidden">
+      <div class="card">
+        <div class="title" id="prepTitle">玩家 1</div>
+        <p class="lead" id="prepText">拿好手机，准备好就点开始。</p>
+        <button class="btn" id="prepBtn">开始</button>
       </div>
     </div>
 
@@ -154,8 +164,23 @@
           <span>历史最佳<b id="statBest">0</b></span>
         </div>
         <span class="badge hidden" id="newRecord">新纪录！</span>
-        <p id="endHint" class="lead" style="margin-top:0;margin-bottom:18px"></p>
+        <p id="endHint" class="lead" style="margin:0 0 12px"></p>
         <button class="btn" id="restartBtn" data-sm="restart">再来一局</button>
+        <button class="btn ghost" id="shareBtn">复制成绩，发给朋友</button>
+        <div class="share-box hidden" id="shareBox"></div>
+      </div>
+    </div>
+
+    <div id="resultScreen" class="overlay hidden">
+      <div class="card">
+        <div class="title" id="resultTitle">平局！</div>
+        <div class="vs">
+          <div class="side" id="p1Side">玩家 1<b id="p1Score">0</b></div>
+          <div class="tag">VS</div>
+          <div class="side" id="p2Side">玩家 2<b id="p2Score">0</b></div>
+        </div>
+        <button class="btn" id="againVersusBtn">再来一轮</button>
+        <button class="btn ghost" id="backBtn">回主页</button>
       </div>
     </div>
   </div>
@@ -167,6 +192,7 @@
   const board = document.getElementById('board');
   const basket = document.getElementById('basket');
   const scoreEl = document.getElementById('score');
+  const scoreLabel = document.getElementById('scoreLabel');
   const scorePill = document.getElementById('scorePill');
   const comboPill = document.getElementById('comboPill');
   const comboVal = document.getElementById('comboVal');
@@ -174,42 +200,45 @@
   const timerEl = document.getElementById('timer');
   const flash = document.getElementById('flash');
   const toast = document.getElementById('toast');
-  const startScreen = document.getElementById('startScreen');
-  const overScreen = document.getElementById('overScreen');
+  const screens = { start: startScreen, prep: prepScreen, over: overScreen, result: resultScreen };
 
   // ---- 参数 ----
   const TOTAL = 60;
-  const FRUIT_SIZE = 54, BASKET_W = 96, BASKET_H = 72, BOMB_PENALTY = 3;
-  const COMBO_X2 = 5, COMBO_X3 = 12;      // 连击阈值
+  const FRUIT_SIZE = 58, BASKET_W = 104, BASKET_H = 76, BOMB_PENALTY = 3;
+  const COMBO_X2 = 5, COMBO_X3 = 12;
   const BEST_KEY = 'saymake.fruitCatch.best';
 
-  // ---- 内联 SVG：主角与道具（不用 emoji） ----
+  // ---- 内联 SVG：写实风的水果、炸弹、篮子（多层渐变 + 高光 + 纹理） ----
   const svg = (inner, w = FRUIT_SIZE, h = FRUIT_SIZE) => `<svg viewBox="0 0 64 64" width="${w}" height="${h}" aria-hidden="true">${inner}</svg>`;
-  const grad = (id, a, b) => `<defs><radialGradient id="${id}" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></radialGradient></defs>`;
-  const shine = (x, y) => `<ellipse cx="${x}" cy="${y}" rx="7" ry="4" fill="#fff" opacity=".55" transform="rotate(-25 ${x} ${y})"/>`;
-  const leaf = `<path d="M33 9c6-4 12-2 13 2-5 3-10 2-13-2z" fill="#3DBE6C"/>`;
+  const defs = (id, stops) => `<radialGradient id="${id}" cx="38%" cy="32%" r="72%">${stops.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('')}</radialGradient>`;
+  const shine = (x, y, rx, ry, op, rot) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#fff" opacity="${op}" filter="url(#soft)" transform="rotate(${rot} ${x} ${y})"/>`;
+  const pores = (id, color) => `<pattern id="${id}" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".55" fill="${color}" opacity=".35"/></pattern>`;
+  const STEM = `<path d="M32 16c0-6 1-9 3-12" stroke="#5C3A1E" stroke-width="3" stroke-linecap="round" fill="none"/>`;
+  const LEAF = `<linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7BD389"/><stop offset="1" stop-color="#2E8B57"/></linearGradient><path d="M34 7c7-5 14-2 15 3-6 4-12 2-15-3z" fill="url(#lg)"/><path d="M35 9c4-1 8-1 11 0" stroke="#1F6B3A" stroke-width=".8" fill="none" opacity=".6"/>`;
   const applePath = 'M32 14c-4-6-12-6-16-4-10 5-12 20-4 30 5 7 12 11 20 9 8 2 15-2 20-9 8-10 6-25-4-30-4-2-12-2-16 4z';
+  const FILTERS = `<filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.1"/></filter>`;
   const FRUITS = [
-    { id: 'apple', color: '#FF5C8A', art: grad('g-apple', '#FFB3C4', '#E5304F') + `<path d="${applePath}" fill="url(#g-apple)"/>` + shine(22, 26) + `<path d="M32 15c0-5 1-8 3-10" stroke="#7A4B2A" stroke-width="3" stroke-linecap="round" fill="none"/>` + leaf },
-    { id: 'orange', color: '#F0861B', art: grad('g-orange', '#FFD9A0', '#F0861B') + `<circle cx="32" cy="35" r="23" fill="url(#g-orange)"/>` + shine(23, 25) + `<circle cx="32" cy="12" r="2.5" fill="#8A5A2B"/>` + leaf },
-    { id: 'lemon', color: '#F2BE1C', art: grad('g-lemon', '#FFF6C2', '#F2BE1C') + `<ellipse cx="32" cy="34" rx="25" ry="18" fill="url(#g-lemon)" transform="rotate(-18 32 34)"/>` + `<ellipse cx="9" cy="28" rx="4" ry="3.5" fill="#F2BE1C"/><ellipse cx="55" cy="40" rx="4" ry="3.5" fill="#F2BE1C"/>` + shine(24, 27) },
-    { id: 'grape', color: '#9B4DDB', art: grad('g-grape', '#D9A6F2', '#7B2FB8') + [[24, 22], [40, 22], [16, 36], [32, 36], [48, 36], [24, 50], [40, 50]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9.5" fill="url(#g-grape)"/>`).join('') + shine(21, 19) + `<path d="M32 14c0-4 1-6 3-8" stroke="#7A4B2A" stroke-width="3" stroke-linecap="round" fill="none"/>` + leaf },
-    { id: 'straw', color: '#D7263D', art: grad('g-straw', '#FF9AA8', '#D7263D') + `<path d="M32 16c10-2 22 4 22 14 0 12-12 22-22 26-10-4-22-14-22-26 0-10 12-16 22-14z" fill="url(#g-straw)"/>` + [[24, 34], [40, 34], [32, 44], [26, 48], [38, 48], [32, 28]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="1.6" ry="2.4" fill="#FFE08A"/>`).join('') + `<path d="M18 17l8 2 6-9 6 9 8-2-5 8c-6 3-12 3-18 0z" fill="#3DBE6B"/>` + shine(24, 30) },
+    { id: 'apple', color: '#E0533D', art: FILTERS + defs('ra', [[0, '#FF9A9A'], [.45, '#E5304F'], [1, '#8E1230']]) + LEAF + `<path d="${applePath}" fill="url(#ra)"/><path d="${applePath}" fill="none" stroke="#6E0B22" stroke-opacity=".35" stroke-width="1.2"/>` + shine(23, 26, 6, 9, .55, -30) + shine(40, 22, 2.2, 3.5, .7, -20) + STEM },
+    { id: 'orange', color: '#F5921E', art: FILTERS + defs('ro', [[0, '#FFDFA8'], [.5, '#F5921E'], [1, '#B45600']]) + pores('po', '#7a4000') + LEAF + `<circle cx="32" cy="35" r="23" fill="url(#ro)"/><circle cx="32" cy="35" r="23" fill="url(#po)"/><circle cx="32" cy="35" r="23" fill="none" stroke="#7a4000" stroke-opacity=".3"/>` + shine(23, 25, 6, 8, .5, -30) + `<circle cx="32" cy="13" r="2.6" fill="#8A5A2B"/>` },
+    { id: 'lemon', color: '#F2C21B', art: FILTERS + defs('rl', [[0, '#FFF7C4'], [.5, '#F2C21B'], [1, '#B88A00']]) + pores('pl', '#8a6500') + `<ellipse cx="32" cy="34" rx="25" ry="18" fill="url(#rl)" transform="rotate(-18 32 34)"/><ellipse cx="32" cy="34" rx="25" ry="18" fill="url(#pl)" transform="rotate(-18 32 34)"/><ellipse cx="32" cy="34" rx="25" ry="18" fill="none" stroke="#8a6500" stroke-opacity=".3" transform="rotate(-18 32 34)"/><ellipse cx="9" cy="28" rx="4.5" ry="3.8" fill="#E0B31A"/><ellipse cx="55" cy="40" rx="4.5" ry="3.8" fill="#E0B31A"/>` + shine(24, 27, 6, 4, .5, -18) },
+    { id: 'grape', color: '#9B4DDB', art: FILTERS + defs('rg', [[0, '#E4C9FF'], [.45, '#8E3BD1'], [1, '#3E1068']]) + LEAF + [[24, 22], [40, 22], [16, 36], [32, 36], [48, 36], [24, 50], [40, 50]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9.5" fill="url(#rg)"/>`).join('') + `<circle cx="21" cy="19" r="2" fill="#fff" opacity=".7" filter="url(#soft)"/><circle cx="13" cy="33" r="1.6" fill="#fff" opacity=".6" filter="url(#soft)"/>` + STEM },
+    { id: 'straw', color: '#D7263D', art: FILTERS + defs('rs', [[0, '#FF8E9B'], [.5, '#D7263D'], [1, '#7A0A1C']]) + `<path d="M32 16c10-2 22 4 22 14 0 12-12 22-22 26-10-4-22-14-22-26 0-10 12-16 22-14z" fill="url(#rs)"/>` + [[24, 34], [40, 34], [32, 44], [26, 48], [38, 48], [32, 28]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="1.5" ry="2.3" fill="#FFE08A" stroke="#7A0A1C" stroke-width=".5"/>`).join('') + `<path d="M18 17l8 2 6-9 6 9 8-2-5 8c-6 3-12 3-18 0z" fill="#3DBE6B"/><path d="M24 18l8 1 8-1" stroke="#1F6B3A" stroke-width=".7" fill="none" opacity=".6"/>` + shine(24, 30, 5, 8, .45, -20) },
   ];
-  const BOMB = { id: 'bomb', color: '#2B2B3A', art: grad('g-bomb', '#6B6B80', '#17171F') + `<circle cx="32" cy="38" r="22" fill="url(#g-bomb)"/><ellipse cx="24" cy="29" rx="6" ry="4" fill="#fff" opacity=".35" transform="rotate(-25 24 29)"/><rect x="27" y="12" width="10" height="8" rx="2" fill="#3C3C4A"/><path d="M32 12c0-5 6-8 10-4" stroke="#8A5A2B" stroke-width="3" fill="none" stroke-linecap="round"/><circle class="spark" cx="43" cy="8" r="3.5" fill="#FFB627"/>` };
-  const GOLDEN = { id: 'golden', color: '#F2A900', art: grad('g-gold', '#FFF7C2', '#F2A900') + `<path d="${applePath}" fill="url(#g-gold)"/>` + shine(22, 26) + `<path d="M32 15c0-5 1-8 3-10" stroke="#B8860B" stroke-width="3" stroke-linecap="round" fill="none"/>` + `<path d="M50 10l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff" opacity=".95"/>` };
-  const BASKET_SVG = `<svg viewBox="0 0 80 64" width="${BASKET_W}" height="${BASKET_H}" aria-hidden="true"><defs><linearGradient id="g-basket" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5FD9BD"/><stop offset="1" stop-color="#1E9E82"/></linearGradient></defs><path d="M6 16h68l-8 42H14z" fill="url(#g-basket)"/><path d="M10 30h60M13 44h54" stroke="#0F6B57" stroke-width="2" opacity=".35" fill="none"/><path d="M26 16l3 42M40 16v42M54 16l-3 42" stroke="#0F6B57" stroke-width="2" opacity=".35" fill="none"/><ellipse cx="40" cy="16" rx="34" ry="7" fill="#7FE8CF"/><ellipse cx="40" cy="16" rx="28" ry="4.5" fill="#12806A"/><ellipse cx="26" cy="13" rx="10" ry="2.5" fill="#fff" opacity=".35"/></svg>`;
+  const BOMB = { id: 'bomb', color: '#2B2B3A', art: FILTERS + defs('rb', [[0, '#8A8A9A'], [.4, '#2E2E3A'], [1, '#0C0C12']]) + `<linearGradient id="cap" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C9C9D4"/><stop offset="1" stop-color="#5A5A68"/></linearGradient><circle cx="32" cy="38" r="22" fill="url(#rb)"/><rect x="26" y="11" width="12" height="9" rx="2" fill="url(#cap)"/><path d="M32 12c0-6 7-9 11-4" stroke="#8A5A2B" stroke-width="3" fill="none" stroke-linecap="round"/><circle class="spark" cx="44" cy="7" r="3.5" fill="#FFB627"/>` + shine(23, 28, 7, 4, .45, -30) + shine(26, 25, 2, 3, .8, -20) };
+  const GOLDEN = { id: 'golden', color: '#F2A900', art: FILTERS + defs('rgold', [[0, '#FFFBE0'], [.4, '#F5B400'], [1, '#A66A00']]) + `<path d="${applePath}" fill="url(#rgold)"/><path d="${applePath}" fill="none" stroke="#7A4D00" stroke-opacity=".4" stroke-width="1.2"/>` + shine(23, 26, 6, 9, .8, -30) + shine(40, 22, 2.2, 3.5, .95, -20) + `<path d="M32 16c0-6 1-9 3-12" stroke="#8A5A00" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M50 8l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff" opacity=".95"/>` };
+  const BASKET_SVG = `<svg viewBox="0 0 80 64" width="${BASKET_W}" height="${BASKET_H}" aria-hidden="true"><defs><linearGradient id="bw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9A066"/><stop offset="1" stop-color="#8A5A2B"/></linearGradient><pattern id="weave" width="12" height="8" patternUnits="userSpaceOnUse"><rect width="12" height="8" fill="url(#bw)"/><path d="M0 4 Q3 1 6 4 T12 4" stroke="#5C3A1E" stroke-width="1.2" fill="none" opacity=".45"/><path d="M6 0 V8" stroke="#5C3A1E" stroke-width="1" opacity=".3"/></pattern><linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EBC58F"/><stop offset="1" stop-color="#B07A3F"/></linearGradient></defs><path d="M6 16 H74 L64 60 H16 Z" fill="url(#weave)"/><path d="M6 16 H74 L64 60 H16 Z" fill="none" stroke="#4A2E14" stroke-width="1.5" opacity=".5"/><path d="M8 22 Q40 30 72 22" stroke="#000" stroke-width="4" fill="none" opacity=".12"/><ellipse cx="40" cy="16" rx="34" ry="7" fill="url(#rim)"/><ellipse cx="40" cy="16" rx="34" ry="7" fill="none" stroke="#4A2E14" stroke-width="1" opacity=".4"/><ellipse cx="40" cy="17" rx="27" ry="4.5" fill="#3B2410"/><ellipse cx="24" cy="13" rx="12" ry="2.2" fill="#fff" opacity=".45"/></svg>`;
   basket.innerHTML = BASKET_SVG;
 
   // ---- 状态 ----
   let score = 0, combo = 0, maxCombo = 0, running = false, raf = null;
   let fruits = [], basketX = 0, targetX = 0, squash = 0, catchY = 0, boardW = 0, boardH = 0;
-  let elapsed = 0, lastT = 0, spawnIn = 0, shownLeft = -1, phase = 0, caughtCount = 0;
+  let elapsed = 0, lastT = 0, spawnIn = 0, shownLeft = -1, phase = 0;
+  let mode = 'solo', versus = { p1: null, p2: null, current: 1 };
   let best = { score: 0, combo: 0 };
-  try { best = Object.assign(best, JSON.parse(localStorage.getItem(BEST_KEY) || '{}')); } catch (e) { /* 隐私模式下读不到，忽略 */ }
+  try { best = Object.assign(best, JSON.parse(localStorage.getItem(BEST_KEY) || '{}')); } catch (e) { /* 隐私模式读不到，忽略 */ }
 
   const mult = () => combo >= COMBO_X3 ? 3 : combo >= COMBO_X2 ? 2 : 1;
-  const nextThreshold = () => combo < COMBO_X2 ? COMBO_X2 : combo < COMBO_X3 ? COMBO_X3 : COMBO_X3;
+  const nextThreshold = () => combo < COMBO_X2 ? COMBO_X2 : COMBO_X3;
 
   // ---- 布局 ----
   function measure() {
@@ -222,9 +251,9 @@
   }
   function clampX(x) { return Math.max(BASKET_W / 2, Math.min(boardW - BASKET_W / 2, x)); }
   function drawBasket() {
-    const s = squash > 0 ? 1 - squash * 1.2 : 1;           // 压缩回弹
-    basket.style.transform = `translate(${basketX - BASKET_W / 2}px, ${boardH - BASKET_H - 14}px) scale(${2 - s}, ${s})`;
+    const s = squash > 0 ? 1 - squash * 1.2 : 1;
     basket.style.transformOrigin = `${BASKET_W / 2}px ${BASKET_H}px`;
+    basket.style.transform = `translate(${basketX - BASKET_W / 2}px, ${boardH - BASKET_H - 14}px) scale(${2 - s}, ${s})`;
   }
 
   // ---- 生成 ----
@@ -238,9 +267,8 @@
     board.appendChild(el);
     const x = FRUIT_SIZE / 2 + 12 + Math.random() * (boardW - FRUIT_SIZE - 24);
     const y0 = -FRUIT_SIZE / 2;
-    // 出现时从 scale .4 弹到 1（WAAPI，不干扰主循环里的 transform）
-    el.animate([{ transform: `translate(${x - FRUIT_SIZE / 2}px, ${y0}px) scale(.4)`, opacity: 0 }, { transform: `translate(${x - FRUIT_SIZE / 2}px, ${y0}px) scale(1)`, opacity: 1 }], { duration: 180, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
-    const vy = (220 + Math.random() * 90) * (golden ? 1.35 : 1);
+    el.animate([{ transform: `translate(${x - FRUIT_SIZE / 2}px, ${y0}px) scale(.4)`, opacity: 0 }, { transform: `translate(${x - FRUIT_SIZE / 2}px, ${y0}px) scale(1)`, opacity: 1 }], { duration: 200, easing: 'cubic-bezier(.2,.9,.3,1.2)' });
+    const vy = (210 + Math.random() * 80) * (golden ? 1.35 : 1);
     fruits.push({ el, x, y: y0, vy, type });
   }
 
@@ -249,10 +277,10 @@
     for (let i = 0; i < 8; i++) {
       const p = document.createElement('div');
       p.className = 'p'; p.style.background = color;
-      p.style.left = (x - 5) + 'px'; p.style.top = (y - 5) + 'px';
+      p.style.left = (x - 4.5) + 'px'; p.style.top = (y - 4.5) + 'px';
       board.appendChild(p);
-      const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 50;
-      p.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d - 20}px) scale(.2)`, opacity: 0 }], { duration: 550, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => p.remove();
+      const a = Math.random() * Math.PI * 2, d = 36 + Math.random() * 44;
+      p.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d - 18}px) scale(.2)`, opacity: 0 }], { duration: 600, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => p.remove();
     }
   }
   function floatText(x, y, text, cls) {
@@ -274,6 +302,7 @@
     toast.textContent = text;
     toast.animate([{ opacity: 0, transform: 'translateX(-50%) translateY(-8px)' }, { opacity: 1, transform: 'translateX(-50%) translateY(0)' }, { opacity: 1, transform: 'translateX(-50%) translateY(0)', offset: .7 }, { opacity: 0, transform: 'translateX(-50%) translateY(-8px)' }], { duration: 1400, easing: 'ease-out' });
   }
+  function show(name) { for (const k in screens) screens[k].classList.toggle('hidden', k !== name); }
 
   // ---- 判定 ----
   function onCatch(f) {
@@ -283,10 +312,10 @@
       flash.classList.remove('on'); void flash.offsetWidth; flash.classList.add('on');
       board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake');
     } else {
-      const m = mult(); combo++; caughtCount++;
+      const m = mult(); combo++;
       const pts = (f.type === GOLDEN ? 5 : 1) * m;
       score += pts;
-      floatText(f.x, catchY, '+' + pts, f.type === GOLDEN ? '' : '');
+      floatText(f.x, catchY, '+' + pts);
       burst(f.x, catchY, f.type.color);
       squash = 0.12;
       if (combo === COMBO_X2 || combo === COMBO_X3) showToast('连击 x' + mult() + '！');
@@ -296,9 +325,9 @@
     scoreEl.textContent = score; updateComboUI();
   }
   function onMiss(f) {
-    if (f.type === BOMB) return;                 // 炸弹漏掉是好事
-    const near = Math.abs(f.x - basketX) < 70;
-    if (combo > 0 || near) floatText(f.x, boardH - 90, near ? '就差一点' : '断了', 'miss');
+    if (f.type === BOMB) return;
+    const near = Math.abs(f.x - basketX) < 72;
+    if (combo > 0 || near) floatText(f.x, boardH - 90, near ? '就差一点' : '连击断了', 'miss');
     combo = 0; updateComboUI();
   }
 
@@ -307,23 +336,23 @@
     if (!running) return;
     const dt = Math.min(0.05, (t - lastT) / 1000 || 0);
     lastT = t; elapsed += dt;
-    const speedUp = 1 + (elapsed / TOTAL) * 1.25;
+    const speedUp = 1 + (elapsed / TOTAL) * 1.2;
 
     basketX += (targetX - basketX) * Math.min(1, dt * 14);
     squash = Math.max(0, squash - dt * 1.2);
     drawBasket();
 
     const ph = Math.min(3, Math.floor(elapsed / 15));
-    if (ph !== phase) { phase = ph; board.dataset.phase = String(ph); showToast(ph === 3 ? '最后冲刺！' : '加速！'); }
+    if (ph !== phase) { phase = ph; showToast(ph === 3 ? '最后 20 秒' : '加速！'); }
 
     spawnIn -= dt;
-    if (spawnIn <= 0) { spawn(); spawnIn = Math.max(0.42, 0.95 - (elapsed / TOTAL) * 0.45); }
+    if (spawnIn <= 0) { spawn(); spawnIn = Math.max(0.45, 0.95 - (elapsed / TOTAL) * 0.4); }
 
     for (let i = fruits.length - 1; i >= 0; i--) {
       const f = fruits[i];
       f.y += f.vy * speedUp * dt;
       f.el.style.transform = `translate(${f.x - FRUIT_SIZE / 2}px, ${f.y}px)`;
-      const caught = Math.abs(f.x - basketX) <= (BASKET_W / 2 + FRUIT_SIZE / 2 - 10);
+      const caught = Math.abs(f.x - basketX) <= (BASKET_W / 2 + FRUIT_SIZE / 2 - 12);
       if (caught && f.y + FRUIT_SIZE / 2 >= catchY) { onCatch(f); f.el.remove(); fruits.splice(i, 1); }
       else if (f.y - FRUIT_SIZE / 2 > boardH) { onMiss(f); f.el.remove(); fruits.splice(i, 1); }
     }
@@ -340,12 +369,13 @@
     if (best.score > 0) { el.textContent = '历史最佳 ' + best.score + ' 分 · 最高连击 ' + best.combo; el.classList.remove('hidden'); }
   }
 
+  // ---- 模式 ----
   function start() {
     clearFruits();
-    score = 0; combo = 0; maxCombo = 0; caughtCount = 0; elapsed = 0; spawnIn = 0.35; shownLeft = -1; phase = 0;
-    board.dataset.phase = '0'; running = true;
+    score = 0; combo = 0; maxCombo = 0; elapsed = 0; spawnIn = 0.35; shownLeft = -1; phase = 0; running = true;
     scoreEl.textContent = '0'; timerEl.textContent = TOTAL; updateComboUI();
-    startScreen.classList.add('hidden'); overScreen.classList.add('hidden');
+    scoreLabel.textContent = mode === 'versus' ? '玩家 ' + versus.current : '得分';
+    show(null);
     measure();
     lastT = performance.now();
     cancelAnimationFrame(raf);
@@ -355,6 +385,7 @@
     running = false; cancelAnimationFrame(raf); clearFruits();
     const isRecord = score > best.score && score > 0;
     if (isRecord) { best = { score, combo: Math.max(maxCombo, best.combo) }; try { localStorage.setItem(BEST_KEY, JSON.stringify(best)); } catch (e) { /* 忽略 */ } }
+    if (mode === 'versus') { endVersus(); return; }
     document.getElementById('endTitle').textContent = score >= 60 ? '手速可以！' : score >= 25 ? '时间到！' : '再来一把？';
     document.getElementById('finalScore').textContent = score;
     document.getElementById('statCombo').textContent = maxCombo;
@@ -362,11 +393,45 @@
     document.getElementById('newRecord').classList.toggle('hidden', !isRecord);
     const hint = document.getElementById('endHint');
     hint.textContent = isRecord ? '刷新了自己的纪录' : best.score > 0 ? '差 ' + (best.score - score + 1) + ' 分破纪录，连击不断能翻倍' : '连着接住 5 个，分数翻倍';
-    overScreen.classList.remove('hidden');
+    document.getElementById('shareBox').classList.add('hidden');
+    document.getElementById('shareBtn').textContent = '复制成绩，发给朋友';
+    show('over');
   }
-  function restart() { start(); }
+  function startVersus() {
+    mode = 'versus'; versus = { p1: null, p2: null, current: 1 };
+    document.getElementById('prepTitle').textContent = '玩家 1';
+    document.getElementById('prepText').textContent = '拿好手机，准备好就点开始。玩完传给玩家 2。';
+    show('prep');
+  }
+  function endVersus() {
+    if (versus.current === 1) {
+      versus.p1 = { score, combo: maxCombo };
+      versus.current = 2;
+      document.getElementById('prepTitle').textContent = '玩家 2';
+      document.getElementById('prepText').textContent = '玩家 1 拿了 ' + versus.p1.score + ' 分。轮到你了。';
+      show('prep');
+    } else {
+      versus.p2 = { score, combo: maxCombo };
+      const a = versus.p1.score, b = versus.p2.score;
+      document.getElementById('resultTitle').textContent = a === b ? '平局，再来一轮？' : (a > b ? '玩家 1 赢了！' : '玩家 2 赢了！');
+      document.getElementById('p1Score').textContent = a;
+      document.getElementById('p2Score').textContent = b;
+      document.getElementById('p1Side').classList.toggle('win', a > b);
+      document.getElementById('p2Side').classList.toggle('win', b > a);
+      show('result');
+    }
+  }
+  function backToStart() { mode = 'solo'; scoreLabel.textContent = '得分'; show('start'); showBestLine(); }
+  function restart() { mode === 'versus' ? startVersus() : start(); }
   function getScore() { return score; }
   function isRunning() { return running; }
+
+  async function share() {
+    const text = `我在《接水果》拿了 ${score} 分，最高连击 ${maxCombo} 个。来挑战我！`;
+    const box = document.getElementById('shareBox');
+    try { await navigator.clipboard.writeText(text); document.getElementById('shareBtn').textContent = '已复制，去粘贴给朋友'; }
+    catch (e) { box.textContent = text; box.classList.remove('hidden'); document.getElementById('shareBtn').textContent = '长按上面的文字复制'; }
+  }
 
   // ---- 输入 ----
   function pointTo(e) { const r = board.getBoundingClientRect(); targetX = clampX(e.clientX - r.left); }
@@ -374,8 +439,13 @@
   board.addEventListener('pointermove', (e) => { if (e.buttons || e.pointerType === 'touch') pointTo(e); });
   window.addEventListener('resize', measure);
 
-  document.getElementById('startBtn').addEventListener('click', start);
+  document.getElementById('startBtn').addEventListener('click', () => { mode = 'solo'; start(); });
+  document.getElementById('versusBtn').addEventListener('click', startVersus);
+  document.getElementById('prepBtn').addEventListener('click', start);
   document.getElementById('restartBtn').addEventListener('click', restart);
+  document.getElementById('shareBtn').addEventListener('click', share);
+  document.getElementById('againVersusBtn').addEventListener('click', startVersus);
+  document.getElementById('backBtn').addEventListener('click', backToStart);
   measure(); showBestLine();
 
   // 契约：验收器依赖这四个方法

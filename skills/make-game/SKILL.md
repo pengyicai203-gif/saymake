@@ -20,9 +20,16 @@ description: 当用户用一句话想要一个 H5 小游戏、网页小玩具、
 
 ### 第 0 步：读库，提取信号
 
-读 `data/conventions.json` 的四块：`aesthetics`（12 种视觉方向）、`typography`、`mechanics`（14 种机制）、`decisionGuide`（信号→方向的映射、问题库、诊断清单）。
+库是社区维护的四个文件，都在 `data/`：
 
-然后从用户的话里提信号（`decisionGuide.signals.fromUserWords`）：题材词、情绪词、年代/参考词、受众词、场景词、否定词。写下来，哪怕只有一两个。也读一下工作目录的 `.saymake/preferences.md`（之前的偏好）。
+- `conventions.json` —— 入口：默认值、`decisionGuide`（信号→方向、问题库、提问预算、诊断清单）、验收与契约
+- `aesthetics.json` —— 视觉方向（16 种）：每种一整套 palette / typography / shapes / motion / assets / pitfalls，不是"禁用什么"
+- `mechanics.json` —— 机制（按玩法类型的起步组合 + 单条机制 + 反模式）
+- `typography.json` —— 字体方向，跟审美方向走
+
+四个都要读。然后从用户的话里提信号（`decisionGuide.signals.fromUserWords`）：题材词、情绪词、年代/参考词、质感词、受众词、场景词、意义词、否定词。写下来，哪怕只有一两个。也读一下工作目录的 `.saymake/preferences.md`（之前的偏好）。
+
+每条库条目都带 `source`。做判断时可以顺着出处去读原文，不是照搬条目。
 
 ### 第 1 步：判断，并决定问什么
 
@@ -73,6 +80,8 @@ description: 当用户用一句话想要一个 H5 小游戏、网页小玩具、
 
 按选定的方向，把 `aesthetics.directions[id]` 的 palette / typography / shapes / motion / assets 过一遍，对照它的 pitfalls。定下：配色值、三级字号的字体栈、主角怎么画、三种动效（出现 / 命中 / 失误）。以 `templates/base-game.html` 为骨架，但**样式区按方向重写**——模板只是结构。
 
+**库没有合适的方向时**（用户的感觉 16 种都对不上）：按 `aesthetics.custom` 自己合成一个——一句话写"像什么"，palette / typography / shapes / motion / assets 各一行，第一稿时告诉用户"我做的是 XX 感觉，不对可以换"。用户认可后，把它加进 `aesthetics.json`（`source.type: "dogfood"`），下次就不用合成了。**库的每一个缺口都应该变成一条新条目。**
+
 ### 第 3 步：生成
 
 - 满足契约（见文末），这是验收器能验的唯一东西。
@@ -87,6 +96,8 @@ node <skill目录>/scripts/validate_game.mjs <游戏文件> --browser
 ```
 
 第一次在新机器先 `bash <skill目录>/scripts/setup_browser.sh`。全过才算；不过就修，最多五轮。会在 `.saymake/` 留两张截图：`*.start.png`、`*.play.png`。
+
+改过 `data/*.json` 的话，再跑 `node <skill目录>/scripts/check_library.mjs`，库文件坏了比游戏坏了更麻烦。
 
 ### 第 5 步：看截图，对照所选方向自检
 
@@ -133,7 +144,9 @@ node <skill目录>/scripts/validate_game.mjs <游戏文件> --browser
 - **用对比问，不用开放问。** "可爱还是酷"比"你想要什么风格"有效十倍。
 - **用参考物问。** 一个"像某某游戏"抵十个形容词。
 - **用排除法问。** 用户说不出要什么，但一定说得出不要什么。
-- **在检查点问，不要随时打断。** 开工前、第一稿后、每次修改后，各一次。
+- **在检查点问，不要随时打断。** 开工前、第一稿后、每次修改后，各一次。提问预算见 `decisionGuide.askingBudget`。
+- **用户答"都不像"时，别再列三个方向。** 用质感词追问一次："更真实一点？更简单一点？更暖一点？"——这一问通常比十个方向有用。
+- **先给一稿再问。** 对着实物说"不对"比对着空气描述想要什么容易得多。
 - **答了要看得见。** 用户选了 B，下一稿必须明显是 B。否则他会觉得说了没用。
 - **问的是他的感受和画面，永远不是技术选择。**
 

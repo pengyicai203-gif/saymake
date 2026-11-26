@@ -1,0 +1,62 @@
+{
+  "$comment": "字体方向。只用系统字体，不引入字体文件。按所选审美方向选一种。贡献见 CONTRIBUTING.md。",
+  "directions": [
+    {
+      "id": "rounded-bold",
+      "name": "圆润粗体",
+      "stack": "ui-rounded, -apple-system, \"SF Pro Rounded\", \"PingFang SC\", \"Helvetica Neue\", sans-serif",
+      "feel": "友好、现代、游戏感",
+      "use": "modern-casual, realistic-clean, cartoon-vector, soft-pastel, paper-cut, low-poly-3d",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "geometric-heavy",
+      "name": "几何重磅",
+      "stack": "\"Helvetica Neue\", \"Inter\", \"Segoe UI\", \"PingFang SC\", system-ui, sans-serif",
+      "feel": "有力、海报感",
+      "use": "flat-minimal, bold-comic, neon-night, glitch-vaporwave, low-poly-3d",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "pixel-mono",
+      "name": "像素等宽",
+      "stack": "ui-monospace, \"SF Mono\", Menlo, Consolas, \"PingFang SC\", monospace",
+      "feel": "复古、机器感",
+      "use": "pixel-retro",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "serif-book",
+      "name": "衬线书卷",
+      "stack": "\"Songti SC\", \"Noto Serif CJK SC\", Georgia, \"Times New Roman\", serif",
+      "feel": "有质感、安静",
+      "use": "cozy-autumn 标题, skeuomorphic",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "handwritten",
+      "name": "手写",
+      "stack": "\"Xingkai SC\", \"Kaiti SC\", \"STKaiti\", \"Baoli SC\", \"PingFang SC\", cursive",
+      "feel": "亲切、绘本",
+      "use": "hand-drawn, cel-shaded",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    }
+  ],
+  "hierarchy": "任何方向都要有三级：标题/分数 > 按钮/强调 > 正文。分数和计时永远最大最粗，数字等宽 (tabular-nums)。正文不小于 16px——这是可读性底线，不是审美规则。",
+  "fallbacks": "Android 没有 ui-rounded 和楷体，会退到系统无衬线；关键信息不要依赖特定字体形状"
+}

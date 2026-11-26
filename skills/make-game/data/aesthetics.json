@@ -1,0 +1,358 @@
+{
+  "$comment": "视觉方向库。每种都是一整套：感受、适合、不适合、配色、字体、形状、动效、素材画法、坑、来源。模型按用户的信号选一种，不在列表里的可以自己合成一个并向用户确认。贡献新方向见 CONTRIBUTING.md；改完跑 node scripts/check_library.mjs。",
+  "directions": [
+    {
+      "id": "modern-casual",
+      "name": "现代休闲",
+      "feelsLike": "像现在手机上那些休闲游戏：圆润、干净、颜色鲜亮但不刺眼",
+      "fits": "水果、消除、跑酷、合成、给大众玩的",
+      "avoid": "用户要复古、要酷、要极简时",
+      "palette": {
+        "bg": "奶油/浅色渐变（#FFF6EA→#FFE3EC）",
+        "ink": "#2B2140",
+        "accent": "一个高饱和主色（#FF5C8A）+ 一个辅助色（#FFB627）",
+        "rule": "背景低饱和，主角高饱和，强调色只用一个"
+      },
+      "typography": "rounded-bold；分数 32–48px/800，标题 36–40px/800，正文 16px/600",
+      "shapes": "圆角 20–28px，胶囊按钮，磨砂面板，柔和投影",
+      "motion": "弹性缓动 cubic-bezier(.2,.9,.3,1.2)；出现从 scale .4 弹入；命中有粒子+飘字+回弹",
+      "assets": "内联 SVG：圆润主体 + 径向渐变（亮面→暗面）+ 左上高光 + 一片装饰（叶/眼/光）+ 轻投影",
+      "pitfalls": "emoji 当主角、橙黄渐变按钮、默认控件外观——这些会让它掉回 flash-2000s",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "realistic-clean",
+      "name": "写实清爽",
+      "feelsLike": "像实物摆在干净的桌面上：背景就一两种颜色，水果和器物有光影、纹理和质感",
+      "fits": "水果、食物、器物、厨具、经营；用户说'更真实''像真的东西''背景简单一点'",
+      "avoid": "用户要卡通、要复古、要花哨时",
+      "palette": {
+        "bg": "一色或极淡的渐变（#F7F2EA→#ECE4D6）",
+        "ink": "#2A2520",
+        "accent": "自然界的饱和色（番茄红 #E0533D、芥末黄 #F2B33D）",
+        "rule": "背景越安静，物体越突出。不要彩色光斑、不要纹理背景"
+      },
+      "typography": "rounded-bold 但克制：分数 28px/800，标题 40px/800，正文 16px/500",
+      "shapes": "UI 圆角 20–24px，白色面板；物体本身按真实形状，不强行圆润",
+      "motion": "200ms 内的弹性反馈；投影跟随运动；不要过度弹跳",
+      "assets": "内联 SVG：3 段以上的径向渐变 + 模糊的高光（feGaussianBlur）+ 表面纹理（pattern 小点/编织）+ 边缘暗线 + 投影。水果：渐变+高光+果蒂+叶子叶脉；橙子柠檬加细孔；篮子加编织 pattern 和内部阴影",
+      "pitfalls": "只用两段渐变会像塑料；没有纹理就没有'真实'；背景加彩色光斑会破坏安静",
+      "source": {
+        "type": "dogfood",
+        "ref": "docs/dogfood-log.md 第三轮：用户要求'更真实，背景更简单，水果和篮子更真实'"
+      }
+    },
+    {
+      "id": "cartoon-vector",
+      "name": "卡通矢量",
+      "feelsLike": "像愤怒的小鸟那种：粗描边、扁平色块、形状夸张",
+      "fits": "大众休闲、儿童、搞笑、动物角色；用户说可爱、搞笑、卡通",
+      "avoid": "要真实、要高级感",
+      "palette": {
+        "bg": "单色或简单渐变（#BFE6F2 天蓝 / #FDF1D6 奶黄）",
+        "ink": "#2B2140",
+        "accent": "饱和主色（#FF5C5C）+ 辅助色（#FFD93D）",
+        "rule": "统一 2px 深色描边；背景比主角低一档饱和度"
+      },
+      "typography": "rounded-bold，常配描边字",
+      "shapes": "圆润夸张的比例（大头小身），描边统一",
+      "motion": "squash & stretch 明显，预备动作",
+      "assets": "SVG 纯色填充 + 统一描边 + 一处高光块",
+      "pitfalls": "描边粗细不一致、比例不夸张就变成普通扁平",
+      "source": {
+        "type": "article",
+        "ref": "https://vsquad.art/blog/articles/different-video-game-art-styles-how-to-pick-the-perfect-visuals/"
+      }
+    },
+    {
+      "id": "low-poly-3d",
+      "name": "低多边形",
+      "feelsLike": "像纪念碑谷那种：由一块块平面拼出来的立体，干净、现代、有设计感",
+      "fits": "极简谜题、建筑、风景、太空；用户说高级、几何、立体感",
+      "avoid": "手绘、复古",
+      "palette": {
+        "bg": "浅色（#F4F1EA）或深色（#1C2233），大留白",
+        "ink": "#1F2933",
+        "accent": "一个撞色（#FF6B4A）",
+        "rule": "主体靠同一色相 3–5 阶明度分面；只有主角用一个撞色"
+      },
+      "typography": "geometric 细字重，宽字距，小字号也可以",
+      "shapes": "三角/多边形面片，无描边，靠明暗分面",
+      "motion": "整体缓慢旋转/视差，元素间平滑过渡",
+      "assets": "用 SVG polygon 拼面：每个面一个明度；或 CSS clip-path 多层叠出体积",
+      "pitfalls": "面太少像扁平，面太多像廉价 3D；没有明确的光源方向就散",
+      "source": {
+        "type": "article",
+        "ref": "https://pixune.com/blog/character-art-styles/"
+      }
+    },
+    {
+      "id": "cel-shaded",
+      "name": "赛璐璐（日系动画）",
+      "feelsLike": "像日本动画截图：大色块、硬边阴影、一两笔高光、干净线条",
+      "fits": "日系、角色驱动、动作、青春题材；用户说动漫、二次元",
+      "avoid": "欧美写实、极简",
+      "palette": {
+        "bg": "明亮天蓝 #7EC8F0 或室内暖白",
+        "ink": "#1F1F2E",
+        "accent": "主色 + 比主色深一档的硬边阴影色",
+        "rule": "阴影是色块不是渐变；高光纯白"
+      },
+      "typography": "geometric 或 handwritten，字距略宽",
+      "shapes": "干净的路径，阴影是硬边的色块，不是渐变",
+      "motion": "利落、少中间帧，强调瞬间",
+      "assets": "SVG 纯色 + 一层硬边阴影 path + 白色高光 path + 细描边",
+      "pitfalls": "用了柔和渐变就不是赛璐璐了",
+      "source": {
+        "type": "article",
+        "ref": "https://pixune.com/blog/character-art-styles/"
+      }
+    },
+    {
+      "id": "pixel-retro",
+      "name": "像素复古",
+      "feelsLike": "像红白机、GB 掌机那个年代：小方格、有限的颜色、有点糊",
+      "fits": "用户说复古、像素、小时候、街机、8-bit；冒险、射击、平台",
+      "avoid": "用户要现代、精致、治愈时",
+      "palette": {
+        "bg": "调色板里最浅的一色（#9bbc0f）或黑",
+        "ink": "调色板最深的一色（#0f380f）",
+        "accent": "调色板里的高饱和色（#8bac0f）",
+        "rule": "整局只用 8–12 个颜色，不新增"
+      },
+      "typography": "pixel-mono；全大写、宽字距；字号取 8 的倍数",
+      "shapes": "无圆角、无阴影渐变、1–2px 黑描边；image-rendering: pixelated",
+      "motion": "逐帧跳变，不做平滑补间；闪烁代替渐隐",
+      "assets": "CSS box-shadow 像素画、或 <rect> 拼的小方格 SVG、或 emoji 加 pixelated 处理（这里 emoji 是对的）",
+      "pitfalls": "混入圆角和柔和阴影，一下就不像了",
+      "source": {
+        "type": "article",
+        "ref": "https://pixune.com/blog/character-art-styles/"
+      }
+    },
+    {
+      "id": "flash-2000s",
+      "name": "千禧年网页游戏",
+      "feelsLike": "像 2005 年门户网站上的 Flash 小游戏：渐变按钮、描边字、闪动",
+      "fits": "只有用户明确要'零几年的感觉''老网页游戏''怀旧'时",
+      "avoid": "其他一切情况——这是模型没有参照时最容易默认长出来的样子",
+      "palette": {
+        "bg": "#0066CC→#3399FF 渐变",
+        "ink": "#FFFFFF",
+        "accent": "#FF9900 / #FFFF00",
+        "rule": "（仅用户明确要这种怀旧感时）渐变按钮 + 白描边字"
+      },
+      "typography": "Arial / Tahoma，粗体，描边或阴影字",
+      "shapes": "斜面按钮、硬阴影、1px 亮边",
+      "motion": "闪动、跑马灯、弹跳",
+      "assets": "emoji、剪贴画感 SVG",
+      "pitfalls": "别用它兜底",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.1 的默认产物，用户评价'像零几年的游戏'"
+      }
+    },
+    {
+      "id": "flat-minimal",
+      "name": "极简平面",
+      "feelsLike": "像精品小工具或海报：大留白、纯色块、几何、字很大",
+      "fits": "用户说简约、高级、设计感；解谜、益智、成人向、工具感",
+      "avoid": "给小孩、要热闹",
+      "palette": {
+        "bg": "#FAFAFA 或 #111",
+        "ink": "#111 或 #FAFAFA（与底反相）",
+        "accent": "#FF4D00",
+        "rule": "只用三个颜色；强调色只给一个元素"
+      },
+      "typography": "geometric-heavy；超大标题 48–72px/900，正文 16px/500，严格对齐网格",
+      "shapes": "直角或极小圆角、无阴影、细线分隔",
+      "motion": "线性缓动 200ms，位移为主，几乎无缩放",
+      "assets": "纯几何 SVG：圆、方、三角，一个元素一种颜色",
+      "pitfalls": "加渐变和阴影就没了气质",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "hand-drawn",
+      "name": "手绘绘本",
+      "feelsLike": "像儿童绘本：纸张纹理、铅笔线、暖色、形状有点歪",
+      "fits": "治愈、儿童、故事、养成；用户说温暖、可爱但不要卡通塑料感",
+      "avoid": "竞技、恐怖",
+      "palette": {
+        "bg": "#F6EFE3 纸色",
+        "ink": "#4A3728 暖棕",
+        "accent": "#E8836B / #8FAE6B",
+        "rule": "低饱和暖色块；填色故意不满边"
+      },
+      "typography": "handwritten；标题 40px，正文 17px，行距松",
+      "shapes": "不规则圆角、手绘描边 2–3px、轻微倾斜",
+      "motion": "慢而软 300–450ms，像纸片翻动",
+      "assets": "SVG 粗描边 + 填色不满（故意留白边）+ 纸纹滤镜",
+      "pitfalls": "线条太直、颜色太饱和就不像手绘",
+      "source": {
+        "type": "article",
+        "ref": "https://pixune.com/blog/game-art-styles/"
+      }
+    },
+    {
+      "id": "neon-night",
+      "name": "霓虹夜景",
+      "feelsLike": "像深夜的街机厅或赛博城市：深底、发光的边、高对比",
+      "fits": "用户说酷、赛博、夜、炫；太空、赛车、音乐",
+      "avoid": "给小孩、要治愈",
+      "palette": {
+        "bg": "#14102E",
+        "ink": "#F4F1FF",
+        "accent": "#FF4FA3 + #5EEAD4",
+        "rule": "只让主角和关键数字发光；其余保持暗"
+      },
+      "typography": "geometric-heavy 全大写宽字距，或描边发光",
+      "shapes": "细描边发光、切角、玻璃面板",
+      "motion": "发光呼吸、拖尾、扫光",
+      "assets": "线条 SVG + drop-shadow 发光，主体深色",
+      "pitfalls": "到处发光等于没有焦点；只让主角和关键数字发光",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "soft-pastel",
+      "name": "日系清新",
+      "feelsLike": "像日系独立游戏：粉蓝米、低饱和、轻盈、留白多",
+      "fits": "治愈、养成、女性向、慢节奏；用户说清新、温柔、轻松",
+      "avoid": "竞技、恐怖、快节奏",
+      "palette": {
+        "bg": "#FFF8EE 或 #CFE8F0",
+        "ink": "#4E5A5E",
+        "accent": "#F8D7DA + 一点 #A8C6DF",
+        "rule": "对比别太低：墨色压住粉蓝"
+      },
+      "typography": "rounded 常规字重 500–600，字距略宽",
+      "shapes": "小圆角 12–16px，细线，半透明层",
+      "motion": "轻盈 400ms，缓入缓出，少弹跳",
+      "assets": "扁平 SVG，少量渐变，边缘柔化",
+      "pitfalls": "对比太低会看不清",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "bold-comic",
+      "name": "美式漫画街头",
+      "feelsLike": "像美式漫画或街头贴纸：粗黑描边、高饱和、爆炸形对话框",
+      "fits": "动作、搞笑、竞技、格斗；用户说热血、夸张",
+      "avoid": "治愈、极简",
+      "palette": {
+        "bg": "#FFF8E1 或 #1E3FFF",
+        "ink": "#111111",
+        "accent": "#FFD600 / #FF2E2E",
+        "rule": "黑描边统一 3–4px；一张图最多三个饱和色"
+      },
+      "typography": "geometric-heavy 斜体 900，描边字，爆炸贴纸里的数字",
+      "shapes": "粗黑描边 3–4px、爆炸形、倾斜",
+      "motion": "快而猛 120–200ms，overshoot 明显",
+      "assets": "SVG 粗描边 + 纯色 + 半调网点",
+      "pitfalls": "描边粗细不统一",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "paper-cut",
+      "name": "剪纸层叠",
+      "feelsLike": "像几层彩纸叠出来的：色块、投影层次、视差",
+      "fits": "休闲、益智、儿童但不幼稚；用户说有质感、有层次",
+      "avoid": "极简、赛博",
+      "palette": {
+        "bg": "最浅一阶（#FFF4E0）",
+        "ink": "#3A2E2A",
+        "accent": "撞色（#E85D3D）",
+        "rule": "同色相 3–4 阶明度分层，层间柔和投影"
+      },
+      "typography": "rounded-bold",
+      "shapes": "大色块、层间柔和投影、边缘可略不规则",
+      "motion": "层与层视差移动，慢速",
+      "assets": "SVG 大色块路径，每层一个投影",
+      "pitfalls": "层次超过 4 层就乱",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "skeuomorphic",
+      "name": "拟物质感",
+      "feelsLike": "像真的东西：木纹、金属、玻璃、纸牌",
+      "fits": "赌场、厨房、模拟经营、桌游；用户说要真实、要质感、要'像实物的界面'",
+      "avoid": "现代简约",
+      "palette": {
+        "bg": "材质本身（毡绿 #35654d / 木纹 #8B5A2B）",
+        "ink": "#F5EEDC",
+        "accent": "金 #D4AF37 / 红 #B3261E",
+        "rule": "要么全拟物，要么不拟物"
+      },
+      "typography": "serif 或 geometric 700",
+      "shapes": "真实高光/阴影、纹理、倒角",
+      "motion": "物理感：惯性、摩擦",
+      "assets": "渐变 + 纹理 + 内阴影模拟材质",
+      "pitfalls": "做一半拟物一半扁平最难看",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "glitch-vaporwave",
+      "name": "蒸汽波故障",
+      "feelsLike": "像 Y2K 的 MV：紫粉渐变、扫描线、错位的字",
+      "fits": "音乐、潮流、Y2K、年轻人社交；用户说蒸汽波、赛博、千禧",
+      "avoid": "严肃、儿童",
+      "palette": {
+        "bg": "黑 #0B0014",
+        "ink": "#F5E9FF",
+        "accent": "#7B2FF7 / #F107A3 / #00E5FF",
+        "rule": "色差与重影只给标题；分数保持可读"
+      },
+      "typography": "geometric-heavy 或 pixel，字做错位/重影",
+      "shapes": "网格地平线、扫描线、色差",
+      "motion": "故障抖动、色差偏移、缓慢漂移",
+      "assets": "发光几何 + 网格 + 扫描线覆盖层",
+      "pitfalls": "可读性；分数一定要清楚",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "cozy-autumn",
+      "name": "温暖秋日",
+      "feelsLike": "像秋天的咖啡馆：暖棕、橙色、奶白，木质感，舒服",
+      "fits": "经营、烹饪、收集、慢节奏；用户说温暖、舒服、治愈但不要日系",
+      "avoid": "竞技、赛博",
+      "palette": {
+        "bg": "#FFF4E6",
+        "ink": "#4A3320",
+        "accent": "#E07A2F / #7A8B4F",
+        "rule": "饱和度中等，别压暗"
+      },
+      "typography": "serif 标题 + rounded 正文",
+      "shapes": "中等圆角 16px、细描边、纸感",
+      "motion": "柔和 300ms",
+      "assets": "SVG 带描边和轻微纹理，饱和度中等",
+      "pitfalls": "颜色太暗会显得旧",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    }
+  ],
+  "custom": "列表里没有合适的时候，模型自己合成一个方向：用一句话写出'像什么'，给 palette/typography/shapes/motion/assets 各一行，并在第一稿时告诉用户'我做的是 XX 感觉，不对可以换'。如果合成出来的方向被用户认可，欢迎按 CONTRIBUTING.md 加回库里。"
+}

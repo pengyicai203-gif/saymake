@@ -1,0 +1,332 @@
+{
+  "$comment": "机制库。按玩法类型和用户想要的'一局的意义'来选，不是越多越好。去掉一个机制游戏没差别，就不要加。每条带来源；贡献新机制见 CONTRIBUTING.md。",
+  "byGameType": {
+    "$comment": "起步组合。再按'一局的意义'增减。",
+    "reaction": [
+      "combo",
+      "phases",
+      "juice",
+      "near-miss",
+      "best-record",
+      "fast-restart"
+    ],
+    "dodge": [
+      "phases",
+      "juice",
+      "near-miss",
+      "risk-choice",
+      "best-record",
+      "fast-restart"
+    ],
+    "puzzle": [
+      "goals",
+      "choice",
+      "unlock",
+      "fast-restart"
+    ],
+    "relax": [
+      "juice",
+      "unlock",
+      "story",
+      "warm-up"
+    ],
+    "party": [
+      "social",
+      "time-pressure",
+      "juice",
+      "satisfying-fail"
+    ],
+    "arcade": [
+      "combo",
+      "phases",
+      "risk-choice",
+      "best-record",
+      "fast-restart",
+      "satisfying-fail"
+    ]
+  },
+  "patterns": [
+    {
+      "id": "clarity",
+      "name": "一眼看懂",
+      "fits": "一切超休闲；首屏没有教程",
+      "skip": "复杂的、需要说明的玩法（那就不该做成本品类的单局游戏）",
+      "how": "三秒规则 / 奶奶测试：看一眼画面就知道该点哪里。玩法写成一句话：动词 + 失败条件 + 得分。做不到就砍功能",
+      "say": "打开就知道怎么玩",
+      "source": {
+        "type": "article",
+        "ref": "https://logicsimplified.com/newgames/what-makes-a-hyper-casual-game-sticky-in-the-first-30-seconds/"
+      }
+    },
+    {
+      "id": "one-sentence",
+      "name": "一句话说得清",
+      "fits": "开工前的自检",
+      "skip": "无",
+      "how": "把游戏写成一句话：动词 + 失败条件 + 计分。写不进一句话，说明 v1 范围太大，砍到能写进去",
+      "say": "",
+      "source": {
+        "type": "article",
+        "ref": "https://pixelfork.ai/blog/posts/make-a-hypercasual-game-with-ai"
+      }
+    },
+    {
+      "id": "fast-restart",
+      "name": "一键重开",
+      "fits": "一切短局游戏——行业里被称作本品类最重要的留存功能",
+      "skip": "长局、剧情向",
+      "how": "结束后 30 秒内能开始下一局：一个大按钮直达，没有菜单、没有过渡页、没有二次确认",
+      "say": "结束就能马上再来",
+      "source": {
+        "type": "article",
+        "ref": "https://pixelfork.ai/blog/posts/make-a-hypercasual-game-with-ai"
+      }
+    },
+    {
+      "id": "loop-length",
+      "name": "一局 45–90 秒",
+      "fits": "超休闲首局",
+      "skip": "解谜、放松类",
+      "how": "首局中位数 45–90 秒；太短建立不了感情，太长不像'再来一把'",
+      "say": "一局一分钟",
+      "source": {
+        "type": "article",
+        "ref": "https://www.9-pixels.com/blog/hyper-casual-viral"
+      }
+    },
+    {
+      "id": "satisfying-fail",
+      "name": "好看的失败",
+      "fits": "一切有失败状态的游戏",
+      "skip": "无",
+      "how": "失败本身要好看、值得截图：倒塌、压扁、飞散。失败动画是传播素材，不是惩罚",
+      "say": "输了也好玩",
+      "source": {
+        "type": "article",
+        "ref": "https://www.9-pixels.com/blog/hyper-casual-viral"
+      }
+    },
+    {
+      "id": "warm-up",
+      "name": "热身→校准→奖励→挑战→休息",
+      "fits": "无尽/街机类",
+      "skip": "固定关卡",
+      "how": "开局 10–20 秒安全热身；随后加速校准；失败时给点奖励降低挫败；之后进入真正的挑战；高强度后留一段喘息",
+      "say": "一开始会轻松一点，后面越来越快",
+      "source": {
+        "type": "paper",
+        "ref": "https://hwjypic.web1991.com/zhikufile/20220623/bdd9d2e66eb0cdaacdc0d79b823ab19a.pdf"
+      }
+    },
+    {
+      "id": "staged-revelation",
+      "name": "分层揭示",
+      "fits": "有多个系统但不想一上来全教",
+      "skip": "只有一个机制的极简游戏",
+      "how": "前 10 秒只有核心交互；第一分钟引入一个奖励;第一局引入收集；之后再引入目标。不要功能倾倒",
+      "say": "玩着玩着会有新东西",
+      "source": {
+        "type": "article",
+        "ref": "https://gameboard.online/when-hyper-casual-grows-up-design-patterns-that-stretch-15-s"
+      }
+    },
+    {
+      "id": "goals",
+      "name": "微目标",
+      "fits": "一切；尤其是中长局",
+      "skip": "无",
+      "how": "永远有一个够得着的小目标：到 100 分、接 5 个、撑 30 秒。看得见完成进度",
+      "say": "随时知道下一步",
+      "source": {
+        "type": "article",
+        "ref": "https://gameboard.online/when-hyper-casual-grows-up-design-patterns-that-stretch-15-s"
+      }
+    },
+    {
+      "id": "combo",
+      "name": "连击倍率",
+      "fits": "反应、街机、节奏",
+      "skip": "冥想、解谜、慢节奏",
+      "how": "连续命中倍率 x1→x2→x3，失误归零，顶部有进度提示",
+      "say": "连着接住会翻倍",
+      "source": {
+        "type": "article",
+        "ref": "https://pixelfork.ai/blog/posts/make-a-hypercasual-game-with-ai"
+      }
+    },
+    {
+      "id": "rare-target",
+      "name": "稀有奖励",
+      "fits": "大多数动作类",
+      "skip": "极简、无分数",
+      "how": "5–8% 出现高分目标，更快或更险",
+      "say": "偶尔会有金色的，分高但难接",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "phases",
+      "name": "阶段变化",
+      "fits": "所有有时长的游戏",
+      "skip": "无限放松类",
+      "how": "每 15–20 秒速度/目标/背景变化一次",
+      "say": "越往后越快，背景也会变",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "best-record",
+      "name": "历史纪录",
+      "fits": "刷分类",
+      "skip": "放松、剧情类",
+      "how": "localStorage 记最佳，结算页显示新纪录或差距；最佳分常驻可见",
+      "say": "会记住你最好的成绩",
+      "source": {
+        "type": "article",
+        "ref": "https://pixelfork.ai/blog/posts/make-a-hypercasual-game-with-ai"
+      }
+    },
+    {
+      "id": "juice",
+      "name": "打击感",
+      "fits": "一切",
+      "skip": "无",
+      "how": "命中：粒子 + 飘字 + 回弹；失误：震屏或闪色。不改玩法，改手感",
+      "say": "接住会有反馈",
+      "source": {
+        "type": "article",
+        "ref": "https://logicsimplified.com/newgames/what-makes-a-hyper-casual-game-sticky-in-the-first-30-seconds/"
+      }
+    },
+    {
+      "id": "near-miss",
+      "name": "险情提示",
+      "fits": "反应、躲避",
+      "skip": "回合制",
+      "how": "擦边漏掉时飘一句'就差一点'——'差一个像素'是再来一次的发动机",
+      "say": "差一点的时候会提示你",
+      "source": {
+        "type": "article",
+        "ref": "https://logicsimplified.com/newgames/what-makes-a-hyper-casual-game-sticky-in-the-first-30-seconds/"
+      }
+    },
+    {
+      "id": "risk-choice",
+      "name": "风险取舍",
+      "fits": "躲避、街机",
+      "skip": "儿童低龄",
+      "how": "高分目标旁边放危险，让玩家决定要不要",
+      "say": "有时候要赌一把",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "lives",
+      "name": "生命/容错",
+      "fits": "难度高的",
+      "skip": "30 秒短局",
+      "how": "3 条命，失误扣一条",
+      "say": "有三次机会",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "choice",
+      "name": "局内选择",
+      "fits": "roguelite、合成类",
+      "skip": "30 秒短局",
+      "how": "每隔一段时间三选一强化",
+      "say": "每次可以选一个能力",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "unlock",
+      "name": "收集解锁",
+      "fits": "多局积累、治愈",
+      "skip": "一次性玩",
+      "how": "累计分数/次数解锁新皮肤、新目标；第一个解锁点放在不太高的里程碑",
+      "say": "玩久了会解锁新东西",
+      "source": {
+        "type": "article",
+        "ref": "https://gameboard.online/when-hyper-casual-grows-up-design-patterns-that-stretch-15-s"
+      }
+    },
+    {
+      "id": "social",
+      "name": "异步比拼",
+      "fits": "聚会、朋友",
+      "skip": "独自放松",
+      "how": "不需要实时联机：两人轮流 + 成绩对比、可复制的成绩文本、'来挑战我'。永远可选，不强制",
+      "say": "可以和朋友比",
+      "source": {
+        "type": "article",
+        "ref": "https://gameboard.online/when-hyper-casual-grows-up-design-patterns-that-stretch-15-s"
+      }
+    },
+    {
+      "id": "story",
+      "name": "角色与一句话剧情",
+      "fits": "治愈、养成、儿童",
+      "skip": "街机",
+      "how": "一个有性格的角色，每局一句台词",
+      "say": "有个小角色陪你玩",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    },
+    {
+      "id": "time-pressure",
+      "name": "倒计时",
+      "fits": "聚会、街机",
+      "skip": "放松、解谜",
+      "how": "一局 30–90 秒",
+      "say": "限时一分钟",
+      "source": {
+        "type": "internal",
+        "ref": "SayMake v0.3 初始库"
+      }
+    }
+  ],
+  "anti-patterns": [
+    {
+      "id": "feature-dump",
+      "name": "功能倾倒",
+      "why": "每多一个系统，新玩家就多一次停下来思考；思考是黏性的敌人",
+      "source": {
+        "type": "article",
+        "ref": "https://logicsimplified.com/newgames/what-makes-a-hyper-casual-game-sticky-in-the-first-30-seconds/"
+      }
+    },
+    {
+      "id": "live-ops",
+      "name": "过早加运营系统",
+      "why": "每日奖励、体力、商店都需要分析和变现管线才配得上它的复杂度；单文件小游戏里一律不加",
+      "source": {
+        "type": "article",
+        "ref": "https://pixelfork.ai/blog/posts/make-a-hypercasual-game-with-ai"
+      }
+    },
+    {
+      "id": "needs-tutorial",
+      "name": "需要教程才懂",
+      "why": "如果一个功能需要弹窗解释它为什么重要，它对休闲游戏来说就太重了",
+      "source": {
+        "type": "article",
+        "ref": "https://gameboard.online/when-hyper-casual-grows-up-design-patterns-that-stretch-15-s"
+      }
+    }
+  ],
+  "ending": "结算页永远给一个'再来一局'的理由：新纪录 / 差 N 分 / 解锁了什么 / 角色说了一句什么；并且重开按钮一触即达"
+}

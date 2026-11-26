@@ -1,7 +1,13 @@
 {
-  "$comment": "H5 小游戏惯例库 v0.3.0。这不是规则集，是选项库 + 判断指南。模型根据用户的话判断该用哪种审美、哪些机制、哪种字体；判断不准就带着选项回来问用户。用户明确要复古感时，emoji 和硬阴影就是对的。",
+  "$comment": "H5 小游戏惯例库 v0.4.0 —— 入口文件。库本体在 aesthetics.json / mechanics.json / typography.json，由社区持续补充（见 CONTRIBUTING.md）。这不是规则集，是选项库 + 判断指南：模型根据用户的话判断该用哪种审美、哪些机制、哪种字体；判断不准就带着选项回来问用户。",
   "category": "h5-mini-game",
-  "version": "0.3.0",
+  "version": "0.4.0",
+  "libraries": {
+    "$comment": "改任何库文件后运行 node scripts/check_library.mjs 校验。",
+    "aesthetics": "aesthetics.json",
+    "mechanics": "mechanics.json",
+    "typography": "typography.json"
+  },
 
   "defaults": {
     "$comment": "用户说'你定/随便'或信息不足时的兜底。不是规则。",
@@ -20,27 +26,31 @@
     "signals": {
       "fromUserWords": [
         "题材词（水果、太空、猫、僵尸）→ 决定素材和部分审美",
-        "情绪词（治愈、酷、搞笑、紧张、怀旧、简约）→ 直接映射到 aesthetics",
+        "情绪词（治愈、酷、搞笑、紧张、怀旧、简约、真实）→ 直接映射到 aesthetics",
         "年代/参考词（复古、像素、小时候、红白机、Y2K、像某某游戏）→ 映射到对应审美，哪怕它'过时'",
+        "质感词（更真实、简单点、花哨点、暖一点）→ 决定 assets 的画法和 palette 的复杂度",
         "受众词（给小孩、给朋友、给自己、给长辈）→ 决定难度、字号、表达方式",
         "场景词（打发时间、聚会、睡前、通勤）→ 决定节奏与一局时长",
+        "意义词（破纪录、放松、和朋友比）→ 决定机制组合，可以叠加",
         "否定词（不要花哨、别太幼稚、不要暗色）→ 排除法，优先级高于其他信号"
       ],
-      "whenSignalsConflict": "否定词 > 参考/年代词 > 情绪词 > 题材词。冲突明显时（'可爱但不要太幼稚'）用一句话复述你的取舍，让用户确认",
-      "whenNoSignal": "默认 modern-casual + 简单刷分；但在第一稿给出时附带'如果想要别的感觉，可以换成 A/B/C'，让用户低成本改方向",
-      "whenUnsure": "两个方向拿不准，就问。问题必须给两个具体的、带画面描述的选项，而不是'你想要什么风格'"
+      "whenSignalsConflict": "否定词 > 参考/年代词 > 质感词 > 情绪词 > 题材词。冲突明显时（'可爱但不要太幼稚'）用一句话复述你的取舍，让用户确认",
+      "whenNoSignal": "默认 modern-casual + byGameType 起步组合；但在第一稿给出时附带'如果想要别的感觉，可以换成 A/B/C'，让用户低成本改方向",
+      "whenUnsure": "两个方向拿不准，就问。问题必须给两个具体的、带画面描述的选项，而不是'你想要什么风格'",
+      "whenLibraryHasGap": "用户的感觉在库里找不到对应方向时：自己合成一个（见 aesthetics.custom），做出来给用户看；如果用户认可，把它加回库里并标 source.type = 'dogfood'。库的每一次缺口都该变成一条新条目"
     },
     "questionBank": {
       "$comment": "问题设计原则：帮用户从模糊到有画面。每个选项都是一幅具体的画面，5 秒内能选。不问技术问题。",
-      "picture": { "question": "你想让它看起来更像哪一种？", "optionsFrom": "aesthetics[*].feelsLike", "when": "画面感缺失，或两个方向拿不准" },
+      "picture": { "question": "你想让它看起来更像哪一种？", "optionsFrom": "aesthetics.directions[*].feelsLike", "when": "画面感缺失，或两个方向拿不准。选项挑反差大的三个，并在最后加一句'都不像就直接描述给我'", "note": "用户答'都不像'时，追问一句质感词：'更真实一点？更简单一点？更暖一点？'——这比再给三个方向有效" },
       "reference": { "question": "有没有玩过哪个游戏或 App，让你觉得'就是这种感觉'？", "when": "用户词穷、说不清；一个参考物比十个形容词有用" },
       "audience": { "question": "主要给谁玩？", "options": ["给自己打发时间", "给小孩玩", "朋友聚会轮流玩", "给长辈玩"], "when": "难度、字号、表达方式的依据缺失" },
       "pace": { "question": "想要哪种节奏？", "options": ["快、刺激、几秒一局", "中等，一分钟能玩一局", "慢、放松、没有失败"], "when": "机制选择（倒计时/生命/无限模式）的依据缺失" },
-      "meaning": { "question": "玩完一局，你最想看到什么？", "options": ["分数破纪录", "放松了、解压了", "朋友间比一比", "看到角色的故事往下走"], "when": "留存机制选择的依据缺失" },
+      "meaning": { "question": "玩完一局，你最想看到什么？", "options": ["分数破纪录", "放松了、解压了", "朋友间比一比", "看到角色的故事往下走"], "when": "留存机制选择的依据缺失。可以多选，多选就叠加机制", "multi": true },
       "exclude": { "question": "有没有肯定不要的？", "options": ["不要太花哨", "不要太幼稚", "不要太暗", "不要太难"], "when": "第一稿方向偏了，用排除法最快" }
     },
     "askingBudget": {
-      "rule": "每个检查点最多 3 个问题；整个过程通常 3–6 个问题。用户说'你定/随便/开始做'立刻按默认走。问的每一个问题都必须在下一稿里看得见变化——否则用户会觉得白答了",
+      "rule": "每个检查点最多 3 个问题；整个过程通常 3–6 个。用户说'你定/随便/开始做'立刻按默认走。问的每一个问题都必须在下一稿里看得见变化——否则用户会觉得白答了",
+      "loweringCost": "让提问门槛越来越低的办法：① 选项永远是画面，不是术语 ② 能多选就多选 ③ 先给一稿再问，比空着问容易答 ④ 用户答'都不像'时，用质感词追问一次，不要重新列一遍方向",
       "checkpoints": ["开工前：方向", "第一稿后：对不对", "每次修改后：是不是这个意思"]
     },
     "diagnosis": {
@@ -50,209 +60,26 @@
           { "id": "wrong-direction", "name": "方向错了", "how": "做成了可爱，用户想要酷；做成了现代，用户想要复古。画面本身没问题，气质不对", "fix": "给 aesthetics 里反差大的两三个方向当选项" },
           { "id": "rough-assets", "name": "主角画得糙", "how": "SVG 缺高光、缺层次、比例不对，像占位图", "fix": "按所选方向的 assets 配方重画主角，先只画一个给用户看" },
           { "id": "muddy-color", "name": "配色土", "how": "饱和度全拉满、或对比不够、或渐变方向俗", "fix": "换该方向的 palette，整体只保留一个强调色" },
+          { "id": "busy-background", "name": "背景太吵", "how": "光斑、纹理、渐变太多，主角被淹没", "fix": "背景降到一两种颜色，让主角的质感和光影说话（见 realistic-clean）" },
           { "id": "weak-type", "name": "字太弱", "how": "字号小、字重轻、没有层级", "fix": "按 typography 方向重设：标题/分数/正文三级" },
           { "id": "empty-layout", "name": "画面空", "how": "留白过多、主角小、没有焦点", "fix": "主角放大到屏宽 1/6–1/5，加环境元素（背景层次、地面、光）" },
           { "id": "no-motion", "name": "没有动效", "how": "东西瞬间出现消失，像 PPT", "fix": "按所选方向的 motion 加出现/命中/过渡动画" }
         ],
-        "ask": "我看了截图，觉得问题可能在：① 方向（现在是 X 感觉）② 主角画法 ③ 配色。你看着最别扭的是哪个？或者直接说想要更像 A 还是 B。"
+        "ask": "我看了截图，觉得问题可能在：① 方向（现在是 X 感觉）② 主角画法 ③ 背景/配色。你看着最别扭的是哪个？或者直接说想要更像 A 还是 B。"
       },
       "boring": {
         "causes": [
-          { "id": "no-goal", "name": "没有目标", "how": "玩着玩着不知道为了什么", "fix": "从 mechanics 里加目标类：纪录、阶段、解锁" },
-          { "id": "no-feedback", "name": "没反馈", "how": "接住了没感觉，漏掉了也没感觉", "fix": "加打击感：粒子、飘字、回弹、音效（如允许）" },
-          { "id": "flat-difficulty", "name": "节奏平", "how": "从头到尾一个速度", "fix": "加阶段变化或难度曲线" },
+          { "id": "no-goal", "name": "没有目标", "how": "玩着玩着不知道为了什么", "fix": "从 mechanics 里加目标类：goals、best-record、phases、unlock" },
+          { "id": "no-feedback", "name": "没反馈", "how": "接住了没感觉，漏掉了也没感觉", "fix": "加 juice：粒子、飘字、回弹、音效（如允许）" },
+          { "id": "flat-difficulty", "name": "节奏平", "how": "从头到尾一个速度", "fix": "加 warm-up 曲线或 phases" },
           { "id": "too-easy-or-hard", "name": "太简单或太难", "how": "看一局数据：分数分布、存活时间", "fix": "调速度/密度/判定范围，一次只调一个变量" },
-          { "id": "no-tension", "name": "没有取舍", "how": "没有'要不要冒险'的瞬间", "fix": "加风险选择类机制：稀有目标、炸弹旁边的高分" },
+          { "id": "no-tension", "name": "没有取舍", "how": "没有'要不要冒险'的瞬间", "fix": "加 risk-choice：稀有目标、炸弹旁边的高分" },
+          { "id": "friction", "name": "重开有摩擦", "how": "结束后要点好几下才能再来", "fix": "fast-restart：一个大按钮直达" },
           { "id": "theme-flat", "name": "题材没感", "how": "机制对但主题不吸引这个人", "fix": "问用户喜欢什么题材，换皮不换机制" }
         ],
         "ask": "我猜是：① 玩着没有目标 ② 接住了没感觉 ③ 节奏太平。你觉得最接近哪个？"
       }
     }
-  },
-
-  "aesthetics": {
-    "$comment": "视觉方向库。每种都是一整套：感受、适合、不适合、配色、字体、形状、动效、素材画法。模型按用户的信号选一种，不在列表里的可以自己合成一个并向用户确认。",
-    "directions": [
-      {
-        "id": "modern-casual", "name": "现代休闲", "feelsLike": "像现在手机上那些休闲游戏：圆润、干净、颜色鲜亮但不刺眼",
-        "fits": "水果、消除、跑酷、合成、给大众玩的", "avoid": "用户要复古、要酷、要极简时",
-        "palette": { "bg": "奶油/浅色渐变（#FFF6EA→#FFE3EC）", "ink": "#2B2140", "accent": "一个高饱和主色（#FF5C8A）+ 一个辅助色（#FFB627）", "rule": "背景低饱和，主角高饱和，强调色只用一个" },
-        "typography": "rounded-bold；分数 32–48px/800，标题 36–40px/800，正文 16px/600",
-        "shapes": "圆角 20–28px，胶囊按钮，磨砂面板，柔和投影",
-        "motion": "弹性缓动 cubic-bezier(.2,.9,.3,1.2)；出现从 scale .4 弹入；命中有粒子+飘字+回弹",
-        "assets": "内联 SVG：圆润主体 + 径向渐变（亮面→暗面）+ 左上高光 + 一片装饰（叶/眼/光）+ 轻投影",
-        "pitfalls": "emoji 当主角、橙黄渐变按钮、默认控件外观——这些会让它掉回 flash-2000s"
-      },
-      {
-        "id": "pixel-retro", "name": "像素复古", "feelsLike": "像红白机、GB 掌机那个年代：小方格、有限的颜色、有点糊",
-        "fits": "用户说复古、像素、小时候、街机、8-bit；冒险、射击、平台",
-        "avoid": "用户要现代、精致、治愈时",
-        "palette": "8-bit 调色板：不超过 8–12 个颜色（如 #0f380f/#306230/#8bac0f/#9bbc0f 四色 GB，或 NES 调色板）",
-        "typography": "pixel-mono；全大写、宽字距；字号取 8 的倍数",
-        "shapes": "无圆角、无阴影渐变、1–2px 黑描边；image-rendering: pixelated",
-        "motion": "逐帧跳变，不做平滑补间；闪烁代替渐隐",
-        "assets": "CSS box-shadow 像素画、或 <rect> 拼的小方格 SVG、或 emoji 加 pixelated 处理（这里 emoji 是对的）",
-        "pitfalls": "混入圆角和柔和阴影，一下就不像了"
-      },
-      {
-        "id": "flash-2000s", "name": "千禧年网页游戏", "feelsLike": "像 2005 年门户网站上的 Flash 小游戏：渐变按钮、描边字、闪动",
-        "fits": "只有用户明确要'零几年的感觉''老网页游戏''怀旧'时",
-        "avoid": "其他一切情况——这是模型没有参照时最容易默认长出来的样子",
-        "palette": "高饱和蓝/橙/绿渐变，白描边字",
-        "typography": "Arial / Tahoma，粗体，描边或阴影字",
-        "shapes": "斜面按钮、硬阴影、1px 亮边",
-        "motion": "闪动、跑马灯、弹跳",
-        "assets": "emoji、剪贴画感 SVG",
-        "pitfalls": "别用它兜底"
-      },
-      {
-        "id": "flat-minimal", "name": "极简平面", "feelsLike": "像精品小工具或海报：大留白、纯色块、几何、字很大",
-        "fits": "用户说简约、高级、设计感；解谜、益智、成人向、工具感",
-        "avoid": "给小孩、要热闹",
-        "palette": "近黑 + 近白 + 一个强调色（#111 / #FAFAFA / #FF4D00）",
-        "typography": "geometric-heavy；超大标题 48–72px/900，正文 16px/500，严格对齐网格",
-        "shapes": "直角或极小圆角、无阴影、细线分隔",
-        "motion": "线性缓动 200ms，位移为主，几乎无缩放",
-        "assets": "纯几何 SVG：圆、方、三角，一个元素一种颜色",
-        "pitfalls": "加渐变和阴影就没了气质"
-      },
-      {
-        "id": "hand-drawn", "name": "手绘绘本", "feelsLike": "像儿童绘本：纸张纹理、铅笔线、暖色、形状有点歪",
-        "fits": "治愈、儿童、故事、养成；用户说温暖、可爱但不要卡通塑料感",
-        "avoid": "竞技、恐怖",
-        "palette": "米色纸底 #F6EFE3，暖棕描边 #4A3728，低饱和暖色块",
-        "typography": "handwritten；标题 40px，正文 17px，行距松",
-        "shapes": "不规则圆角、手绘描边 2–3px、轻微倾斜",
-        "motion": "慢而软 300–450ms，像纸片翻动",
-        "assets": "SVG 粗描边 + 填色不满（故意留白边）+ 纸纹滤镜",
-        "pitfalls": "线条太直、颜色太饱和就不像手绘"
-      },
-      {
-        "id": "neon-night", "name": "霓虹夜景", "feelsLike": "像深夜的街机厅或赛博城市：深底、发光的边、高对比",
-        "fits": "用户说酷、赛博、夜、炫；太空、赛车、音乐",
-        "avoid": "给小孩、要治愈",
-        "palette": "深底 #14102E，霓虹粉 #FF4FA3 + 青 #5EEAD4，文字近白",
-        "typography": "geometric-heavy 全大写宽字距，或描边发光",
-        "shapes": "细描边发光、切角、玻璃面板",
-        "motion": "发光呼吸、拖尾、扫光",
-        "assets": "线条 SVG + drop-shadow 发光，主体深色",
-        "pitfalls": "到处发光等于没有焦点；只让主角和关键数字发光"
-      },
-      {
-        "id": "soft-pastel", "name": "日系清新", "feelsLike": "像日系独立游戏：粉蓝米、低饱和、轻盈、留白多",
-        "fits": "治愈、养成、女性向、慢节奏；用户说清新、温柔、轻松",
-        "avoid": "竞技、恐怖、快节奏",
-        "palette": "粉 #F8D7DA、蓝 #CFE8F0、米 #FFF8EE；墨色 #4E5A5E",
-        "typography": "rounded 常规字重 500–600，字距略宽",
-        "shapes": "小圆角 12–16px，细线，半透明层",
-        "motion": "轻盈 400ms，缓入缓出，少弹跳",
-        "assets": "扁平 SVG，少量渐变，边缘柔化",
-        "pitfalls": "对比太低会看不清"
-      },
-      {
-        "id": "bold-comic", "name": "美式漫画街头", "feelsLike": "像美式漫画或街头贴纸：粗黑描边、高饱和、爆炸形对话框",
-        "fits": "动作、搞笑、竞技、格斗；用户说热血、夸张",
-        "avoid": "治愈、极简",
-        "palette": "黄 #FFD600、红 #FF2E2E、蓝 #1E3FFF，黑描边 #111",
-        "typography": "geometric-heavy 斜体 900，描边字，爆炸贴纸里的数字",
-        "shapes": "粗黑描边 3–4px、爆炸形、倾斜",
-        "motion": "快而猛 120–200ms， overshoot 明显",
-        "assets": "SVG 粗描边 + 纯色 + 半调网点",
-        "pitfalls": "描边粗细不统一"
-      },
-      {
-        "id": "paper-cut", "name": "剪纸层叠", "feelsLike": "像几层彩纸叠出来的：色块、投影层次、视差",
-        "fits": "休闲、益智、儿童但不幼稚；用户说有质感、有层次",
-        "avoid": "极简、赛博",
-        "palette": "同一色相 3–4 阶明度 + 一个撞色",
-        "typography": "rounded-bold",
-        "shapes": "大色块、层间柔和投影、边缘可略不规则",
-        "motion": "层与层视差移动，慢速",
-        "assets": "SVG 大色块路径，每层一个投影",
-        "pitfalls": "层次超过 4 层就乱"
-      },
-      {
-        "id": "skeuomorphic", "name": "拟物质感", "feelsLike": "像真的东西：木纹、金属、玻璃、纸牌",
-        "fits": "赌场、厨房、模拟经营、桌游；用户说要真实、要质感",
-        "avoid": "现代简约",
-        "palette": "材质色：木 #8B5A2B、毡绿 #35654d、金属灰",
-        "typography": "serif 或 geometric 700",
-        "shapes": "真实高光/阴影、纹理、倒角",
-        "motion": "物理感：惯性、摩擦",
-        "assets": "渐变 + 纹理 + 内阴影模拟材质",
-        "pitfalls": "做一半拟物一半扁平最难看"
-      },
-      {
-        "id": "glitch-vaporwave", "name": "蒸汽波故障", "feelsLike": "像 Y2K 的 MV：紫粉渐变、扫描线、错位的字",
-        "fits": "音乐、潮流、Y2K、年轻人社交；用户说蒸汽波、赛博、千禧",
-        "avoid": "严肃、儿童",
-        "palette": "紫 #7B2FF7、粉 #F107A3、青 #00E5FF，黑底",
-        "typography": "geometric-heavy 或 pixel，字做错位/重影",
-        "shapes": "网格地平线、扫描线、色差",
-        "motion": "故障抖动、色差偏移、缓慢漂移",
-        "assets": "发光几何 + 网格 + 扫描线覆盖层",
-        "pitfalls": "可读性；分数一定要清楚"
-      },
-      {
-        "id": "cozy-autumn", "name": "温暖秋日", "feelsLike": "像秋天的咖啡馆：暖棕、橙色、奶白，木质感，舒服",
-        "fits": "经营、烹饪、收集、慢节奏；用户说温暖、舒服、治愈但不要日系",
-        "avoid": "竞技、赛博",
-        "palette": "奶白 #FFF4E6、橙 #E07A2F、棕 #6B4A2B、橄榄绿 #7A8B4F",
-        "typography": "serif 标题 + rounded 正文",
-        "shapes": "中等圆角 16px、细描边、纸感",
-        "motion": "柔和 300ms",
-        "assets": "SVG 带描边和轻微纹理，饱和度中等",
-        "pitfalls": "颜色太暗会显得旧"
-      }
-    ],
-    "custom": "列表里没有合适的时候，模型自己合成一个方向：用一句话写出'像什么'，给 palette/typography/shapes/motion/assets 各一行，并在第一稿时告诉用户'我做的是 XX 感觉，不对可以换'。鼓励扩充这个库。"
-  },
-
-  "typography": {
-    "$comment": "字体方向。只用系统字体，不引入字体文件。按所选审美方向选一种。",
-    "directions": [
-      { "id": "rounded-bold", "name": "圆润粗体", "stack": "ui-rounded, -apple-system, \"SF Pro Rounded\", \"PingFang SC\", \"Helvetica Neue\", sans-serif", "feel": "友好、现代、游戏感", "use": "modern-casual, soft-pastel, paper-cut" },
-      { "id": "geometric-heavy", "name": "几何重磅", "stack": "\"Helvetica Neue\", \"Inter\", \"Segoe UI\", \"PingFang SC\", system-ui, sans-serif", "feel": "有力、海报感", "use": "flat-minimal, bold-comic, neon-night, glitch-vaporwave（字重 800–900）" },
-      { "id": "pixel-mono", "name": "像素等宽", "stack": "ui-monospace, \"SF Mono\", Menlo, Consolas, \"PingFang SC\", monospace", "feel": "复古、机器感", "use": "pixel-retro" },
-      { "id": "serif-book", "name": "衬线书卷", "stack": "\"Songti SC\", \"Noto Serif CJK SC\", Georgia, \"Times New Roman\", serif", "feel": "有质感、安静", "use": "cozy-autumn 标题, skeuomorphic" },
-      { "id": "handwritten", "name": "手写", "stack": "\"Xingkai SC\", \"Kaiti SC\", \"STKaiti\", \"Baoli SC\", \"PingFang SC\", cursive", "feel": "亲切、绘本", "use": "hand-drawn" }
-    ],
-    "hierarchy": "任何方向都要有三级：标题/分数 > 按钮/强调 > 正文。分数和计时永远最大最粗，数字等宽 (tabular-nums)。正文不小于 16px——这是可读性底线，不是审美规则"
-  },
-
-  "mechanics": {
-    "$comment": "机制库。按玩法类型和用户想要的'一局的意义'来选，不是越多越好。去掉一个机制游戏没差别，就不要加。",
-    "byGameType": {
-      "reaction": ["combo", "phases", "juice", "near-miss", "best-record"],
-      "dodge": ["phases", "juice", "near-miss", "risk-choice", "best-record"],
-      "puzzle": ["goals", "choice", "unlock"],
-      "relax": ["juice", "unlock", "story"],
-      "party": ["social", "time-pressure", "juice"],
-      "arcade": ["combo", "phases", "risk-choice", "best-record"]
-    },
-    "patterns": [
-      { "id": "combo", "name": "连击倍率", "fits": "反应、街机、节奏", "skip": "冥想、解谜、慢节奏", "how": "连续命中倍率 x1→x2→x3，失误归零，顶部有进度提示", "say": "连着接住会翻倍" },
-      { "id": "rare-target", "name": "稀有奖励", "fits": "大多数动作类", "skip": "极简、无分数", "how": "5–8% 出现高分目标，更快或更险", "say": "偶尔会有金色的，分高但难接" },
-      { "id": "phases", "name": "阶段变化", "fits": "所有有时长的游戏", "skip": "无限放松类", "how": "每 15–20 秒速度/目标/背景变化一次", "say": "越往后越快，背景也会变" },
-      { "id": "best-record", "name": "历史纪录", "fits": "刷分类", "skip": "放松、剧情类", "how": "localStorage 记最佳，结算页显示新纪录或差距", "say": "会记住你最好的成绩" },
-      { "id": "juice", "name": "打击感", "fits": "一切", "skip": "无", "how": "命中：粒子 + 飘字 + 回弹；失误：震屏或闪色", "say": "接住会有反馈" },
-      { "id": "near-miss", "name": "险情提示", "fits": "反应、躲避", "skip": "回合制", "how": "擦边漏掉时飘一句'就差一点'", "say": "差一点的时候会提示你" },
-      { "id": "risk-choice", "name": "风险取舍", "fits": "躲避、街机", "skip": "儿童低龄", "how": "高分目标旁边放危险，让玩家决定要不要", "say": "有时候要赌一把" },
-      { "id": "lives", "name": "生命/容错", "fits": "难度高的", "skip": "30 秒短局", "how": "3 条命，失误扣一条", "say": "有三次机会" },
-      { "id": "choice", "name": "局内选择", "fits": "roguelite、合成类", "skip": "30 秒短局", "how": "每隔一段时间三选一强化", "say": "每次可以选一个能力" },
-      { "id": "unlock", "name": "收集解锁", "fits": "多局积累、治愈", "skip": "一次性玩", "how": "累计分数/次数解锁新皮肤、新目标", "say": "玩久了会解锁新东西" },
-      { "id": "social", "name": "比拼分享", "fits": "聚会、朋友", "skip": "独自放松", "how": "两人轮流 + 成绩对比，或可复制的成绩文本", "say": "可以和朋友比" },
-      { "id": "story", "name": "角色与一句话剧情", "fits": "治愈、养成、儿童", "skip": "街机", "how": "一个有性格的角色，每局一句台词", "say": "有个小角色陪你玩" },
-      { "id": "goals", "name": "即时小目标", "fits": "解谜、合成", "skip": "纯反应", "how": "顶部永远显示离下一个目标差多少", "say": "随时知道下一步" },
-      { "id": "time-pressure", "name": "倒计时", "fits": "聚会、街机", "skip": "放松、解谜", "how": "一局 30–90 秒", "say": "限时一分钟" }
-    ],
-    "ending": "结算页永远给一个'再来一局'的理由：新纪录 / 差 N 分 / 解锁了什么 / 角色说了一句什么"
-  },
-
-  "askUser": {
-    "$comment": "旧字段名保留。见 decisionGuide.questionBank。",
-    "coreLoop": { "alwaysAsk": "unless-clear", "note": "用户原话已含玩法则不问" },
-    "mood": { "alwaysAsk": "only-if-unsure", "optionsFrom": "aesthetics[*].feelsLike", "default": "modern-casual" }
   },
 
   "acceptance": {
@@ -269,15 +96,16 @@
       ],
       "feel": [
         "所选的每个机制都在画面上看得见吗？（连击有没有显示、阶段变化有没有感知）",
-        "结算页有'再来一局'的理由吗？",
+        "结算页有'再来一局'的理由吗？重开是否一触即达？",
         "玩一分钟会不会想再来一局？如果不会，缺的是 mechanics 里的哪一个？"
       ]
     }
   },
 
   "contract": {
+    "$comment": "契约不是审美，是验收器依赖的硬约定。",
     "markers": { "start": "data-sm=\"start\"", "score": "data-sm=\"score\"", "restart": "data-sm=\"restart\"" },
     "api": { "object": "window.__sm", "methods": { "start": "() => void", "restart": "() => void", "getScore": "() => number", "isRunning": "() => boolean" } },
-    "hard_rules": ["单文件、无外部资源、无网络请求（契约，不是审美）", "不用 alert/confirm/prompt（契约）", "正文不小于 16px（可读性底线）"]
+    "hard_rules": ["单文件、无外部资源、无网络请求", "不用 alert/confirm/prompt", "正文不小于 16px（可读性底线）"]
   }
 }
