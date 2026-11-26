@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>打砖块</title>
+<style>
+  /* 方向：pixel-retro —— 有限调色板、小方格、无圆角、无渐变、逐帧感 */
+  :root {
+    --bg: #000000; --ink: #FCFCFC; --red: #F83800; --yellow: #F8B800; --blue: #0058F8; --lblue: #3CBCFC;
+    --font: ui-monospace, "SF Mono", Menlo, Consolas, "PingFang SC", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--ink); font-family: var(--font); overscroll-behavior: none; }
+  body { display: flex; justify-content: center; user-select: none; -webkit-user-select: none; touch-action: none; }
+  #app { position: relative; width: 100%; max-width: 390px; height: 100%; display: flex; flex-direction: column; padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
+
+  /* HUD：三栏，全大写宽字距，字号取 8 的倍数 */
+  #hud { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-bottom: 8px; }
+  #hud .k { font-size: 16px; letter-spacing: 2px; color: var(--lblue); }
+  #hud .v { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+  #hud .v.bump { animation: bump .18s steps(2); }
+  @keyframes bump { 50% { color: var(--yellow); } }
+  #lives { letter-spacing: 2px; }
+
+  #board { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  #board.shake { animation: shake .22s steps(2); }
+  @keyframes shake { 25% { transform: translate(2px, 0); } 50% { transform: translate(-2px, 0); } 75% { transform: translate(1px, 0); } }
+  canvas { display: block; width: 100%; max-height: 100%; aspect-ratio: 160 / 240; image-rendering: pixelated; image-rendering: crisp-edges; }
+
+  /* 面板：黑底 + 4px 白边 + 红色投影，按钮按下反色 —— 红白机时代的界面 */
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: rgba(0, 0, 0, .82); padding: 16px; text-align: center; }
+  .screen.hidden { display: none; }
+  .panel { border: 4px solid var(--ink); box-shadow: 6px 6px 0 var(--red); background: var(--bg); padding: 24px 20px; width: 100%; max-width: 320px; }
+  h1 { font-size: 40px; letter-spacing: 6px; text-shadow: 4px 4px 0 var(--red); line-height: 1.1; }
+  .sub { margin-top: 16px; font-size: 16px; line-height: 1.6; }
+  .sub b { color: var(--yellow); font-weight: 700; }
+  .big { margin-top: 20px; font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .rec { display: inline-block; margin-top: 8px; padding: 4px 8px; background: var(--yellow); color: var(--bg); font-size: 16px; font-weight: 700; letter-spacing: 2px; animation: blink .5s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  button { display: block; width: 100%; margin-top: 24px; padding: 16px; font: 700 16px/1 var(--font); letter-spacing: 4px; color: var(--ink); background: var(--bg); border: 4px solid var(--ink); cursor: pointer; }
+  button:active { background: var(--ink); color: var(--bg); }
+  .hint { font-size: 16px; color: var(--lblue); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <div><div class="k">分数</div><div class="v" data-sm="score" id="score">0</div></div>
+    <div><div class="k">最高</div><div class="v" id="best">0</div></div>
+    <div><div class="k">命</div><div class="v" id="lives">❤️❤️❤️</div></div>
+  </div>
+
+  <div id="board">
+    <canvas id="cv" width="160" height="240"></canvas>
+
+    <div class="screen" id="start">
+      <div class="panel">
+        <h1>打砖块</h1>
+        <p class="sub">左右滑动，接住弹球。<br>球掉下去就少一条命。<br><b>一口气连着打，分数翻倍。</b></p>
+        <button data-sm="start" id="btnStart">开 始</button>
+      </div>
+    </div>
+
+    <div class="screen hidden" id="over">
+      <div class="panel">
+        <p class="sub">这一局的分数</p>
+        <div class="big" id="final">0</div>
+        <div id="recWrap" class="hidden"><span class="rec">新纪录！</span></div>
+        <p class="sub" id="gap"></p>
+        <button data-sm="restart" id="btnRestart">再来一局</button>
+        <p class="hint">和朋友的最高分比一比</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ---- 调色板：红白机常见的几种颜色，整局不新增 ----
+  const C = { bg: '#000000', bg2: '#0000A8', bg3: '#005800', ink: '#FCFCFC', red: '#F83800', orange: '#FC9838', yellow: '#F8B800', green: '#00A800', blue: '#0058F8', lblue: '#3CBCFC' };
+  const ROW = [C.red, C.orange, C.yellow, C.green, C.blue, C.lblue];
+  const BGS = [C.bg, C.bg2, C.bg3];
+
+  const W = 160, H = 240, PY = 222, PW = 24, PH = 4, BEST_KEY = 'sm-breakout-best';
+  // 命：自己用小方格拼的心。系统 emoji 的心是光亮的立体心，放在平面像素里会跳出来
+  const HEART = (() => {
+    const g = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'];
+    let r = '';
+    g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === 'X') r += `<rect x="${x}" y="${y}" width="1" height="1"/>`; }));
+    return `<svg viewBox="0 0 7 6" width="21" height="18" style="image-rendering:pixelated" fill="#F83800" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+  })();
+  const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  const $ = (id) => document.getElementById(id);
+  const board = $('board'), elScore = $('score'), elBest = $('best'), elLives = $('lives');
+
+  const S = { score: 0, best: +(localStorage.getItem(BEST_KEY) || 0), lives: 3, level: 1, combo: 0, hits: 0, running: false };
+  let ball, paddle, bricks, parts, targetX = W / 2, raf = null, last = 0, toast = { t: 0, text: '' }, shakeT = 0;
+
+  // ---- 关卡 ----
+  function buildLevel() {
+    bricks = [];
+    const cols = 10, bw = 16, bh = 8, top = 20;
+    for (let r = 0; r < 6; r++) for (let c = 0; c < cols; c++) {
+      bricks.push({ x: c * bw, y: top + r * (bh + 1), w: bw, h: bh, row: r, hp: (S.level >= 2 && r < 2) ? 2 : 1 });
+    }
+  }
+  function speed() { return Math.min(150, 70 + (S.level - 1) * 8 + S.hits * 2.4); }
+  function resetBall() {
+    ball = { x: paddle.x, y: PY - 4, vx: 0, vy: 0, stuck: true, t: 0 };
+    S.combo = 0;
+  }
+  function launch() {
+    const a = (Math.random() * 50 - 25) * Math.PI / 180, s = speed();
+    ball.vx = s * Math.sin(a) || (Math.random() < .5 ? -s * .35 : s * .35);
+    ball.vy = -s * Math.cos(a);
+    ball.stuck = false;
+  }
+  function resetGame() {
+    S.score = 0; S.lives = 3; S.level = 1; S.hits = 0; S.combo = 0; S.running = true;
+    paddle = { x: W / 2 }; parts = []; toast.t = 0;
+    buildLevel(); resetBall(); hud();
+    $('over').classList.add('hidden'); $('start').classList.add('hidden');
+    cancelAnimationFrame(raf); last = 0; raf = requestAnimationFrame(loop);
+  }
+
+  // ---- HUD ----
+  function hud() {
+    elScore.textContent = S.score;
+    elBest.textContent = Math.max(S.best, S.score);
+    elLives.innerHTML = HEART.repeat(Math.max(0, S.lives)) || '<span style="color:#3CBCFC">—</span>';
+  }
+  function bump() { elScore.classList.remove('bump'); void elScore.offsetWidth; elScore.classList.add('bump'); }
+  function say(text) { toast = { t: 1.1, text }; }
+  function burst(x, y, color, n) {
+    for (let i = 0; i < n; i++) parts.push({ x, y, vx: (Math.random() - .5) * 120, vy: (Math.random() - .7) * 120, life: .35 + Math.random() * .25, color });
+  }
+
+  // ---- 判定 ----
+  function hitBrick(b) {
+    b.hp--;
+    if (b.hp > 0) { say('哐'); burst(ball.x, ball.y, C.ink, 3); return; }
+    bricks.splice(bricks.indexOf(b), 1);
+    S.combo++;
+    const mult = S.combo >= 8 ? 4 : S.combo >= 4 ? 2 : 1;
+    S.score += 10 * mult;
+    burst(ball.x, ball.y, ROW[b.row], 6); bump();
+    if (mult > 1 && (S.combo === 4 || S.combo === 8)) say('连击 x' + mult);
+    if (!bricks.length) { S.level++; buildLevel(); resetBall(); say('第 ' + S.level + ' 关'); }
+  }
+  function loseBall() {
+    S.lives--; hud(); shakeT = .22; board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake');
+    if (S.lives <= 0) return gameOver();
+    say('还剩 ' + S.lives + ' 条命'); resetBall();
+  }
+  function gameOver() {
+    S.running = false;
+    // 好看的失败：挡板碎成一个个小方格
+    for (let i = 0; i < PW; i += 2) for (let j = 0; j < PH; j += 2) parts.push({ x: paddle.x - PW / 2 + i, y: PY + j, vx: (Math.random() - .5) * 140, vy: -Math.random() * 110 - 10, life: .9, color: C.ink });
+    const isRec = S.score > S.best && S.score > 0;
+    if (isRec) { S.best = S.score; localStorage.setItem(BEST_KEY, S.best); }
+    setTimeout(() => {
+      $('final').textContent = S.score;
+      $('recWrap').classList.toggle('hidden', !isRec);
+      $('gap').textContent = isRec ? '比上次的最高分还高' : (S.best ? '离最高分还差 ' + (S.best - S.score) : '再玩一局试试');
+      elBest.textContent = S.best;
+      $('over').classList.remove('hidden');
+    }, 650);
+  }
+
+  // ---- 主循环 ----
+  function update(dt) {
+    paddle.x = Math.max(PW / 2 + 2, Math.min(W - PW / 2 - 2, targetX));
+    if (ball.stuck) {
+      ball.x = paddle.x; ball.y = PY - 4; ball.t += dt;
+      if (ball.t > 1.3) launch();
+    } else {
+      const steps = Math.max(1, Math.ceil(Math.hypot(ball.vx, ball.vy) * dt / 3));
+      for (let s = 0; s < steps; s++) {
+        ball.x += ball.vx * dt / steps; ball.y += ball.vy * dt / steps;
+        if (ball.x < 2) { ball.x = 2; ball.vx = Math.abs(ball.vx); }
+        if (ball.x > W - 2) { ball.x = W - 2; ball.vx = -Math.abs(ball.vx); }
+        if (ball.y < 2) { ball.y = 2; ball.vy = Math.abs(ball.vy); }
+        // 挡板：打在哪个位置，就往哪个角度弹
+        if (ball.vy > 0 && ball.y + 1.5 >= PY && ball.y + 1.5 <= PY + PH + 3 && Math.abs(ball.x - paddle.x) <= PW / 2 + 1.5) {
+          const rel = Math.max(-1, Math.min(1, (ball.x - paddle.x) / (PW / 2))), a = rel * Math.PI / 3, sp = speed();
+          ball.y = PY - 2; ball.vx = sp * Math.sin(a); ball.vy = -sp * Math.cos(a);
+          S.hits++; S.combo = 0;
+          if (S.hits % 6 === 0) say('快了');
+        }
+        // 砖块：按重叠量判断从哪个面撞的
+        for (const b of bricks) {
+          if (ball.x + 1.5 > b.x && ball.x - 1.5 < b.x + b.w && ball.y + 1.5 > b.y && ball.y - 1.5 < b.y + b.h) {
+            const ox = Math.min(ball.x + 1.5 - b.x, b.x + b.w - (ball.x - 1.5)), oy = Math.min(ball.y + 1.5 - b.y, b.y + b.h - (ball.y - 1.5));
+            if (ox < oy) ball.vx = -ball.vx; else ball.vy = -ball.vy;
+            hitBrick(b); break;
+          }
+        }
+        if (ball.y > H + 4) { loseBall(); break; }
+      }
+    }
+    parts = parts.filter((p) => (p.life -= dt) > 0);
+    for (const p of parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; }
+    if (toast.t > 0) toast.t -= dt;
+    if (shakeT > 0) shakeT -= dt;
+  }
+
+  function draw() {
+    ctx.fillStyle = BGS[(S.level - 1) % BGS.length];
+    ctx.fillRect(0, 0, W, H);
+    // 砖块：纯色 + 1px 黑色下边和右边，像素画的立体感就靠这一笔
+    for (const b of bricks) {
+      ctx.fillStyle = b.hp > 1 ? C.ink : ROW[b.row];
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.fillStyle = C.bg;
+      ctx.fillRect(b.x, b.y + b.h - 1, b.w, 1); ctx.fillRect(b.x + b.w - 1, b.y, 1, b.h);
+      if (b.hp > 1) { ctx.fillRect(b.x + 6, b.y + 3, 4, 2); }
+    }
+    if (S.running) {
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(Math.round(paddle.x - PW / 2), PY, PW, PH);
+      ctx.fillRect(Math.round(paddle.x - PW / 2), PY, PW, 1);
+      const blink = !ball.stuck || Math.floor(ball.t * 6) % 2 === 0;
+      if (blink) ctx.fillRect(Math.round(ball.x - 1.5), Math.round(ball.y - 1.5), 3, 3);
+    }
+    for (const p of parts) { ctx.fillStyle = p.color; ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); }
+    if (toast.t > 0) {
+      ctx.fillStyle = C.ink; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(toast.text, W / 2, 120);
+    }
+  }
+
+  function loop(t) {
+    const dt = Math.min(.033, last ? (t - last) / 1000 : .016); last = t;
+    update(dt); draw();
+    raf = S.running ? requestAnimationFrame(loop) : null;
+    if (!S.running && parts.length) raf = requestAnimationFrame(loop);
+  }
+
+  // ---- 操作：手指或鼠标在哪，挡板就去哪；球停着的时候点一下就发 ----
+  function toX(e) { const r = cv.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * W; }
+  board.addEventListener('pointermove', (e) => { targetX = toX(e); });
+  board.addEventListener('pointerdown', (e) => { targetX = toX(e); if (ball && ball.stuck && S.running) launch(); });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') targetX = paddle.x - 24;
+    if (e.key === 'ArrowRight') targetX = paddle.x + 24;
+    if (e.key === ' ' && S.running && ball.stuck) { e.preventDefault(); launch(); }
+  });
+
+  $('btnStart').addEventListener('click', resetGame);
+  $('btnRestart').addEventListener('click', resetGame);
+  paddle = { x: W / 2 }; parts = []; buildLevel(); ball = { x: W / 2, y: PY - 4, stuck: true, t: 0, vx: 0, vy: 0 };
+  hud();
+
+  // ---- 契约 ----
+  window.__sm = {
+    start: resetGame,
+    restart: resetGame,
+    getScore: () => S.score,
+    isRunning: () => S.running,
+  };
+})();
+</script>
+</body>
+</html>
