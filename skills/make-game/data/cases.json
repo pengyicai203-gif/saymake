@@ -1,0 +1,62 @@
+{
+  "$comment": "出厂判断案例：来自真实对话，写完整的中文叙述，给模型做参照。用户自己的案例在 ~/.saymake/memory/cases.jsonl，协议里先看用户的，再看这里的。每条必须有 outcome 和 lesson；没经过用户确认的结果不要写成 hit。贡献案例见 CONTRIBUTING.md。",
+  "cases": [
+    {
+      "id": "fruit-v1-emoji",
+      "brief": "做一个在手机上玩的水果接取小游戏。",
+      "signals": ["题材词：水果", "平台：手机", "没有情绪词、没有参考词"],
+      "chose": { "aesthetic": "flash-2000s（当时库里只有一种默认样子）", "genres": ["catch"], "mechanics": ["计时", "计分"], "typography": "系统默认", "audience": "self" },
+      "why": "当时没有任何判断步骤，拿到需求直接写代码；用 emoji 当水果，橙黄渐变背景和按钮。",
+      "asked": [],
+      "outcome": "miss",
+      "feedback": "审美过时，像零几年互联网刚兴起时的游戏；除接篮子外没有留下来的理由。",
+      "lesson": "两个错。第一，交付前没看截图，自己没发现画面过时。第二，把问题归成'标准不够硬'，下一轮去加规则——其实缺的是判断。没有信号时至少要看一眼截图再交付，并给用户换方向的机会。"
+    },
+    {
+      "id": "fruit-v2-hard-rules",
+      "brief": "（用户反馈上一版太丑、不够吸引人）",
+      "signals": ["否定词：太丑", "整体感受：吸引力不足"],
+      "chose": { "aesthetic": "modern-casual", "genres": ["catch"], "mechanics": ["combo", "rare-target", "phases", "best-record", "juice", "near-miss"], "typography": "rounded-bold", "audience": "self" },
+      "why": "按新加的硬规则做：禁 emoji、字号不小于 32、默认至少四个留存钩子。没有先判断'太丑'是哪一种丑。",
+      "asked": [],
+      "outcome": "miss",
+      "feedback": "标准定死了。要的是模型会判断：用户要十年前的复古游戏，就应该用 emoji。",
+      "lesson": "用户说结果不好，先分清是'标准不够'还是'判断不够'。规则只能兜底，不能代替判断。写进库里的每一条都要带'什么时候不适用'。"
+    },
+    {
+      "id": "fruit-options-all-wrong",
+      "brief": "（给出三个方向让用户选：糖果明亮 / 霓虹夜景 / 像素复古 / 手绘绘本）",
+      "signals": ["用户看过第二版后的反应：都不是"],
+      "chose": { "aesthetic": "待定", "genres": ["catch"], "mechanics": [], "typography": "待定", "audience": "self" },
+      "why": "想用反差大的方向让用户挑，省掉开放式提问。",
+      "asked": [
+        { "q": "画面更像哪一种？（三个带画面的方向）", "a": "都不在你的选项里。" }
+      ],
+      "outcome": "miss",
+      "feedback": "想要的感觉不在选项里：更真实，背景色彩更简单，水果和篮子更真实。",
+      "lesson": "选项再反差大，也跳不出库的宽度——当时库里根本没有'写实'这一档。用户答'都不像'时不要再列三个方向，用质感词追问一次（更真实？更简单？更暖？），然后把缺口补回库里。"
+    },
+    {
+      "id": "fruit-v3-realistic",
+      "brief": "更真实：后面的画面背景色彩更简单，水果和篮子更真实。玩完一局想看到分数破纪录、放松解压、和朋友间比一比。",
+      "signals": ["质感词：更真实", "质感词：背景更简单", "意义词：破纪录", "意义词：放松解压", "意义词：和朋友比（三个都要）"],
+      "chose": { "aesthetic": "realistic-clean", "genres": ["catch"], "mechanics": ["best-record", "juice", "social"], "typography": "rounded-bold", "audience": "self" },
+      "why": "质感词直接定了方向：一色暖米背景，水果用多层渐变、高光、表面细节，篮子加编织纹理。三个意义词都要，所以机制是叠加的，不是单选。",
+      "asked": [],
+      "outcome": "hit",
+      "feedback": "用户自己把感觉说清之后，方向一次就对上（用户尚未正式试玩确认）。",
+      "lesson": "'一局的意义'可以多选，多选就把机制叠起来，不要替用户砍。用户说清感觉的那一刻就是一条新惯例——它后来成了库里的 realistic-clean。"
+    },
+    {
+      "id": "breakout-retro",
+      "brief": "做个像红白机那种的打砖块。",
+      "signals": ["年代/参考词：像红白机那种", "题材词：打砖块"],
+      "chose": { "aesthetic": "pixel-retro", "genres": ["breakout"], "mechanics": ["lives", "combo", "best-record", "fast-restart", "juice", "satisfying-fail"], "typography": "pixel-mono", "audience": "self" },
+      "why": "年代词优先级高：有限调色板、低分辨率画布放大、无圆角无渐变、黑底白边面板加红色投影。复古方向不禁 emoji，所以先用 emoji 爱心当命。",
+      "asked": [],
+      "outcome": "hit",
+      "feedback": "自动验收 15 项通过；看截图时自己发现 emoji 爱心是光亮的立体心，在平面像素里跳出来，改成手画的像素心。（用户尚未试玩确认）",
+      "lesson": "复古方向'可以用 emoji'这条建议不完整：系统 emoji 自带光影，放进平面像素会破坏画面。要么自己用小方格拼，要么明确要现代混搭。看截图这一步抓到了验收器抓不到的问题。"
+    }
+  ]
+}

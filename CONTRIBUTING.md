@@ -20,7 +20,12 @@ SayMake 的代码不多，真正值钱的是**惯例库**：做过很多游戏�
 | `aesthetics.json` | 视觉方向 | `feelsLike`（像什么）、`fits` / `avoid`（适合 / 不适合）、`palette`（bg / ink / accent / rule）、`typography`、`shapes`、`motion`、`assets`（主角怎么画）、`pitfalls`、`source` |
 | `mechanics.json` | 机制 + 反模式 + 各玩法类型的起步组合 | `fits` / `skip`（什么时候用、什么时候别用）、`how`（具体怎么做）、`say`（对用户的一句话描述）、`source` |
 | `typography.json` | 字体方向 | `stack`（只能用系统字体）、`feel`、`use`（对应哪些审美方向）、`source` |
+| `genres.json` | 玩法：被验证过的核心循环 | `like`（像什么游戏）、`oneLine`（动词 + 失败条件 + 计分）、`build`（怎么做）、`defaults`（默认数值）、`dials`（难度调哪几个旋钮）、`mechanics`、`audiences`、`pitfalls`、`source` |
+| `audiences.json` | 受众：给谁玩，具体改什么 | `changes`（文字 / 点按目标大小 / 失败处理 / 节奏 / 字号 / 一局时长）、`note`、`source` |
+| `cases.json` | 出厂判断案例 | `brief`（用户原话）、`signals`、`chose`、`why`、`asked`、`outcome`（`hit` / `miss`）、`feedback`、`lesson`。必须是真实对话；用户没确认的结果不要写成 `hit` |
 | `conventions.json` | 入口：默认值、判断指南、问题库、诊断清单、验收与契约 | — |
+
+**玩法库最需要有实战经验的人。** 现在 11 个玩法里只有 4 个在 SayMake 里实测过（接住掉落物、打砖块、点目标、翻牌记忆），其余的"怎么做"和默认数值是摸索出来的，标了 `internal`。你做过其中任何一种，欢迎按真实数值修正。
 
 **库是选项，不是规则。** 每条都要写清楚"什么时候不用"。用户要复古，像素和 emoji 就是对的；写一条"禁止 emoji"进来会被拒。
 

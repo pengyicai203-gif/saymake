@@ -126,8 +126,8 @@
       "typography": "pixel-mono；全大写、宽字距；字号取 8 的倍数",
       "shapes": "无圆角、无阴影渐变、1–2px 黑描边；image-rendering: pixelated",
       "motion": "逐帧跳变，不做平滑补间；闪烁代替渐隐",
-      "assets": "CSS box-shadow 像素画、或 <rect> 拼的小方格 SVG、或 emoji 加 pixelated 处理（这里 emoji 是对的）",
-      "pitfalls": "混入圆角和柔和阴影，一下就不像了",
+      "assets": "CSS box-shadow 像素画、或 <rect> 拼的小方格 SVG、或低分辨率画布放大配 image-rendering: pixelated。图标（心、星、命、金币）自己用小方格拼。这里不禁 emoji，但要知道系统 emoji 自带光影，放进平面像素会跳出来；只有用户要的是复古和现代混搭时才直接用 emoji",
+      "pitfalls": "混入圆角和柔和阴影，一下就不像了；光亮的系统 emoji 图标会破坏平面感",
       "source": {
         "type": "article",
         "ref": "https://pixune.com/blog/character-art-styles/"
@@ -192,11 +192,11 @@
       "typography": "handwritten；标题 40px，正文 17px，行距松",
       "shapes": "不规则圆角、手绘描边 2–3px、轻微倾斜",
       "motion": "慢而软 300–450ms，像纸片翻动",
-      "assets": "SVG 粗描边 + 填色不满（故意留白边）+ 纸纹滤镜",
-      "pitfalls": "线条太直、颜色太饱和就不像手绘",
+      "assets": "SVG 粗描边（2.5–3px，暖棕）+ 填色不满边 + 纸纹滤镜。不满边的做法：填色整体缩小一圈（约 .88）留在描边里面，线里看得到一圈白；不是把填色往外偏移。小图用最简单的形状，画完放大看一眼认不认得出来（梨别画成水滴）",
+      "pitfalls": "线条太直、颜色太饱和就不像手绘；填色偏到描边外面；小图画得太复杂，一眼认不出",
       "source": {
-        "type": "article",
-        "ref": "https://pixune.com/blog/game-art-styles/"
+        "type": "dogfood",
+        "ref": "examples/memory-pairs 实测；定义见 https://pixune.com/blog/game-art-styles/"
       }
     },
     {

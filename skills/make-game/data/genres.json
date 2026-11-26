@@ -1,0 +1,418 @@
+{
+  "$comment": "玩法库：被验证过的核心循环。每个写清一句话、像什么、怎么做、默认数值、难度旋钮、适合谁、常见错误。用户没有玩法信号时，从这里挑三个用 like 描述给他选。做法部分（build/defaults/dials）多数是项目摸索的，没有公开出处，如实标 internal；欢迎有实战经验的人修正。",
+  "genres": [
+    {
+      "id": "catch",
+      "name": "接住掉落物",
+      "like": "接水果那种：东西从上面掉，左右滑动去接",
+      "oneLine": "滑动接住掉下来的东西；漏掉或接到坏的东西受罚；接得越多分越高",
+      "build": "页面元素就够：每个物体一个元素，用 transform + requestAnimationFrame 移动。出现动画用 Web Animations API，不要写在屏幕外的初始位置",
+      "defaults": {
+        "size": "物体 56–64px，不小于屏宽 1/6",
+        "fallSpeed": "210–290 px/s 起步，每 15 秒加一档",
+        "spawnEvery": "0.5–0.8 秒",
+        "session": "60 秒",
+        "catcher": "宽度约为屏宽 30%"
+      },
+      "dials": {
+        "fallSpeed": "难",
+        "spawnEvery": "越密越忙",
+        "badRatio": "炸弹比例，0 = 没有惩罚",
+        "catcherWidth": "越宽越简单"
+      },
+      "mechanics": [
+        "combo",
+        "best-record",
+        "juice",
+        "near-miss",
+        "phases",
+        "warm-up"
+      ],
+      "audiences": [
+        "self",
+        "kids",
+        "party"
+      ],
+      "pitfalls": [
+        "判定范围比篮子小，看着接到了却没算",
+        "物体太小，手机上看不清",
+        "热身不等于没事发生：前 10 秒也要有东西可接",
+        "接到炸弹把分数清零太狠，用扣固定分"
+      ],
+      "source": {
+        "type": "dogfood",
+        "ref": "docs/dogfood-log.md 第一到四轮；examples/fruit-catch"
+      }
+    },
+    {
+      "id": "breakout",
+      "name": "打砖块",
+      "like": "红白机打砖块：挡板接球，把上面的砖全打掉",
+      "oneLine": "左右移动挡板接住球；球掉下去少一条命；砖打完进下一关",
+      "build": "用低分辨率画布（逻辑 160×240）再放大，配 image-rendering: pixelated，就是像素感；球每帧分小步移动，速度再快也不会穿过砖",
+      "defaults": {
+        "ballSpeed": "70 逻辑像素/秒，每接 6 次挡板加一点",
+        "paddleWidth": "屏宽的 15%",
+        "bricks": "6 行 × 10 列",
+        "lives": 3
+      },
+      "dials": {
+        "ballSpeed": "难",
+        "paddleWidth": "越宽越简单",
+        "brickRows": "越多越久",
+        "twoHitBricks": "第二关起加两层硬砖，拉长一局"
+      },
+      "mechanics": [
+        "lives",
+        "combo",
+        "best-record",
+        "fast-restart",
+        "juice",
+        "satisfying-fail",
+        "staged-revelation"
+      ],
+      "audiences": [
+        "self",
+        "party"
+      ],
+      "pitfalls": [
+        "球太快一帧穿过砖",
+        "只按左右键，手机上没法玩——手指在哪挡板去哪",
+        "系统 emoji 的心、星星是光亮立体的，放进像素画面会跳出来，要自己用小方格拼"
+      ],
+      "source": {
+        "type": "dogfood",
+        "ref": "docs/skill-test.md 实测；examples/breakout-retro"
+      }
+    },
+    {
+      "id": "tap",
+      "name": "点目标",
+      "like": "打地鼠那种：东西冒出来就点它",
+      "oneLine": "目标冒出来就点；点错或漏掉受罚；时间到看分数",
+      "build": "页面元素 + 网格布局；目标出现用 CSS 动画，点击后立刻换成命中效果再移除",
+      "defaults": {
+        "size": "目标不小于 64px",
+        "stay": "0.9–1.4 秒起步",
+        "session": "30–45 秒",
+        "atOnce": "同时 1 个，20 秒后 2 个"
+      },
+      "dials": {
+        "stay": "越短越难",
+        "atOnce": "同时出现数",
+        "decoys": "加了不能点的干扰物更乱"
+      },
+      "mechanics": [
+        "combo",
+        "time-pressure",
+        "juice",
+        "best-record",
+        "fast-restart"
+      ],
+      "audiences": [
+        "self",
+        "kids",
+        "party",
+        "elders"
+      ],
+      "pitfalls": [
+        "目标小、挤在一起，手指点不准",
+        "点了没反应，不知道点没点上"
+      ],
+      "source": {
+        "type": "dogfood",
+        "ref": "examples/tap-the-dot"
+      }
+    },
+    {
+      "id": "dodge",
+      "name": "躲避穿行",
+      "like": "Flappy Bird 那种：点一下往上，穿过缝隙别撞",
+      "oneLine": "点一下往上飞；撞到或掉下去就结束；飞过的障碍越多分越高",
+      "build": "画布。玩家固定在左侧三分之一，障碍向左移；跳跃用瞬时速度 + 重力",
+      "defaults": {
+        "gap": "缝隙为屏高的 28–32%",
+        "speed": "每秒移动屏宽的 45%",
+        "spacing": "障碍间隔 1.4–1.8 秒",
+        "session": "10–60 秒"
+      },
+      "dials": {
+        "gap": "越小越难",
+        "speed": "越快越难",
+        "spacing": "越密越难"
+      },
+      "mechanics": [
+        "fast-restart",
+        "best-record",
+        "juice",
+        "near-miss",
+        "satisfying-fail"
+      ],
+      "audiences": [
+        "self",
+        "party"
+      ],
+      "pitfalls": [
+        "一上来就难，第一秒就死，没人想再来",
+        "缝隙小于屏高 25% 对普通人太难",
+        "撞了之后要点好几下才能重开"
+      ],
+      "source": {
+        "type": "internal",
+        "ref": "经典玩法（Flappy Bird，2013）；做法为项目摸索，未在 SayMake 里实测"
+      }
+    },
+    {
+      "id": "runner",
+      "name": "跳障碍跑酷",
+      "like": "Chrome 断网小恐龙那种：一直往前跑，跳过障碍",
+      "oneLine": "点一下跳；撞到障碍就结束；跑得越远分越高",
+      "build": "页面元素或画布都行；跳跃是一条抛物线（起跳速度 + 重力），落地时压扁一下",
+      "defaults": {
+        "speed": "每秒移动屏宽的 60% 起步，逐渐加",
+        "spacing": "障碍间隔 0.9–1.6 秒",
+        "jump": "跳起 0.45 秒左右"
+      },
+      "dials": {
+        "speed": "越快越难",
+        "spacing": "越密越难",
+        "obstacleKinds": "高低障碍混合需要判断"
+      },
+      "mechanics": [
+        "fast-restart",
+        "best-record",
+        "juice",
+        "phases"
+      ],
+      "audiences": [
+        "self",
+        "kids",
+        "party"
+      ],
+      "pitfalls": [
+        "跳跃高度不够，怎么看都过不去",
+        "速度突然跳一档，没有过渡"
+      ],
+      "source": {
+        "type": "internal",
+        "ref": "经典玩法（Chrome Dino，2014）；做法为项目摸索，未实测"
+      }
+    },
+    {
+      "id": "stack",
+      "name": "叠高",
+      "like": "Stack 那种：方块左右晃，点一下放下，一层层往上叠",
+      "oneLine": "点一下把移动的方块放下；没对齐的部分被切掉；方块越来越窄，掉光就结束",
+      "build": "页面元素即可，每层一个方块；没对齐的部分切掉并掉落",
+      "defaults": {
+        "width": "起始宽度为屏宽的 55%",
+        "speed": "每秒横穿一次半，逐层加快",
+        "height": "每层 28–34px"
+      },
+      "dials": {
+        "speed": "越快越难",
+        "startWidth": "越窄容错越低"
+      },
+      "mechanics": [
+        "best-record",
+        "juice",
+        "fast-restart",
+        "satisfying-fail",
+        "unlock"
+      ],
+      "audiences": [
+        "self",
+        "kids",
+        "party"
+      ],
+      "pitfalls": [
+        "完美对齐没有额外反馈，白对齐了"
+      ],
+      "source": {
+        "type": "internal",
+        "ref": "经典玩法（Stack，2016）；做法为项目摸索，未实测"
+      }
+    },
+    {
+      "id": "match",
+      "name": "消除",
+      "like": "开心消消乐、连连看那种：凑齐相同的就消掉",
+      "oneLine": "交换相邻的凑三个一样的；或点两个一样的连起来；时间或步数用完结束",
+      "build": "页面元素网格。首次做建议做'连连看'式（点两个相同的），不用处理下落和连锁，逻辑短一半",
+      "defaults": {
+        "grid": "连连看 6×6；三消 7×7",
+        "cell": "不小于 44px",
+        "kinds": "4–5 种图案",
+        "session": "60–90 秒或限 20 步"
+      },
+      "dials": {
+        "kinds": "图案种类越多越难找",
+        "grid": "越大越久",
+        "time": "限时与否"
+      },
+      "mechanics": [
+        "combo",
+        "time-pressure",
+        "juice",
+        "goals",
+        "fast-restart"
+      ],
+      "audiences": [
+        "self",
+        "kids",
+        "elders"
+      ],
+      "pitfalls": [
+        "图案只靠颜色区分，色弱用户玩不了——每种再加一个形状",
+        "三消的下落和连锁容易写错，首版别做"
+      ],
+      "source": {
+        "type": "internal",
+        "ref": "经典玩法（连连看、Bejeweled）；做法为项目摸索，未实测"
+      }
+    },
+    {
+      "id": "merge",
+      "name": "合成",
+      "like": "2048 或合成大西瓜：相同的碰到一起合成更大的",
+      "oneLine": "2048：滑动，相同的数字合并；大西瓜：投放，相同的水果碰到合成更大的；放满或合不出就结束",
+      "build": "2048 用页面元素网格 + 四个方向的滑动即可。大西瓜要画布 + 圆形碰撞和堆叠，首版建议先做 2048 式，稳定",
+      "defaults": {
+        "grid": "4×4",
+        "session": "3–10 分钟"
+      },
+      "dials": {
+        "grid": "越大越简单",
+        "spawn": "新块出 2 还是 4"
+      },
+      "mechanics": [
+        "best-record",
+        "goals",
+        "juice",
+        "unlock",
+        "fast-restart"
+      ],
+      "audiences": [
+        "self",
+        "elders"
+      ],
+      "pitfalls": [
+        "圆形物理不稳定会抖动、穿透，没有把握别硬写"
+      ],
+      "source": {
+        "type": "internal",
+        "ref": "经典玩法（2048，2014；合成大西瓜，2021）；做法为项目摸索，未实测"
+      }
+    },
+    {
+      "id": "memory",
+      "name": "翻牌记忆",
+      "like": "翻对对牌：翻开两张，一样就留下，不一样盖回去",
+      "oneLine": "翻开两张牌；一样就消掉，不一样盖回去；全配对完成，步数越少越好",
+      "build": "页面元素 + CSS 3D 翻转；开局先全部亮 2 秒再盖上",
+      "defaults": {
+        "pairs": "6 对（4×3）起步",
+        "card": "不小于 64px",
+        "peek": "开局预览 2 秒；翻错 0.7 秒后盖回",
+        "session": "1–3 分钟"
+      },
+      "dials": {
+        "pairs": "越多越难",
+        "peek": "预览越短越难",
+        "timer": "要不要计时"
+      },
+      "mechanics": [
+        "goals",
+        "juice",
+        "best-record",
+        "unlock"
+      ],
+      "audiences": [
+        "self",
+        "kids",
+        "elders"
+      ],
+      "pitfalls": [
+        "翻错立刻盖回，根本没看清第二张是什么",
+        "计时倒计时让放松玩法变紧张",
+        "验收器的运行截图落在开局亮牌那一秒，看不到牌背和翻牌，要自己补拍一张翻开后的"
+      ],
+      "source": {
+        "type": "dogfood",
+        "ref": "按本条目做出了 examples/memory-pairs，见 docs/skill-test.md 的验证记录"
+      }
+    },
+    {
+      "id": "quiz",
+      "name": "答题",
+      "like": "答题闯关：一题几个选项，选对了得分",
+      "oneLine": "每题选一个答案；答对得分；答完看总分",
+      "build": "页面元素题卡。题目由用户提供（直接贴在对话里），或由模型生成；生成的要标明'AI 出题，可能有错'",
+      "defaults": {
+        "count": "5–10 题",
+        "options": "4 个选项",
+        "perQuestion": "不限时，或 15 秒",
+        "target": "选项高度不小于 48px"
+      },
+      "dials": {
+        "count": "题数",
+        "timer": "限时不限时",
+        "explain": "答完要不要给解释"
+      },
+      "mechanics": [
+        "goals",
+        "juice",
+        "best-record",
+        "staged-revelation"
+      ],
+      "audiences": [
+        "self",
+        "kids",
+        "party",
+        "elders"
+      ],
+      "pitfalls": [
+        "题目太多，一局拖太久",
+        "AI 自己出的题不核对就上，答案错了用户不知道"
+      ],
+      "source": {
+        "type": "internal",
+        "ref": "做法为项目摸索，未实测；点按目标大小见 audiences.json"
+      }
+    },
+    {
+      "id": "reflex",
+      "name": "比谁快",
+      "like": "红绿灯游戏：等它变色，看谁先点",
+      "oneLine": "等到信号出现就点；点早了算抢跑；几次取平均，越快越好",
+      "build": "页面元素；随机等 1–4 秒后变色，记录按下时间",
+      "defaults": {
+        "rounds": "5 次取平均",
+        "wait": "随机 1–4 秒",
+        "session": "30 秒"
+      },
+      "dials": {
+        "rounds": "次数",
+        "wait": "最长等待"
+      },
+      "mechanics": [
+        "social",
+        "best-record",
+        "juice",
+        "fast-restart"
+      ],
+      "audiences": [
+        "self",
+        "party",
+        "kids"
+      ],
+      "pitfalls": [
+        "抢跑没有明显提示"
+      ],
+      "source": {
+        "type": "internal",
+        "ref": "做法为项目摸索，未实测"
+      }
+    }
+  ]
+}

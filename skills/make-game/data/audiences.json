@@ -1,0 +1,57 @@
+{
+  "$comment": "受众库：'给谁玩'的答案要落到具体改动上，否则问了等于没问。没说受众时默认 self。",
+  "audiences": [
+    {
+      "id": "self", "name": "给自己打发时间",
+      "changes": { "text": "正常", "targets": "正常", "failure": "正常", "pace": "正常", "type": "正常", "session": "正常" },
+      "note": "默认值，不加也不减",
+      "source": { "type": "internal", "ref": "默认值" }
+    },
+    {
+      "id": "kids", "name": "给小孩玩",
+      "changes": {
+        "text": "不靠文字：说明只用一句话，玩法靠第一次点按就学会；不出现需要阅读的提示",
+        "targets": "能点的东西不小于 64px，间距不小于 8px",
+        "failure": "不惩罚或极轻：没有'游戏结束'，错了就再来，分数只涨不降",
+        "pace": "慢一档：速度取默认值的 70% 左右",
+        "type": "分数和标题加大一档",
+        "session": "不限时，或 1–2 分钟"
+      },
+      "note": "用户没说几岁时按'刚会上手、不太识字'做，并在交付时说明",
+      "source": { "type": "doc", "ref": "https://m2.material.io/design/usability/accessibility.html" }
+    },
+    {
+      "id": "party", "name": "朋友聚会轮流玩",
+      "changes": {
+        "text": "一局结束要有一句能念出来的结果（'小明 37 分'）",
+        "targets": "正常",
+        "failure": "失败要好看，值得围观",
+        "pace": "快：一局 20–45 秒，轮得快",
+        "type": "当前是谁的回合要显眼",
+        "session": "20–45 秒"
+      },
+      "note": "必须做两人轮流和成绩对比；不用联网",
+      "source": { "type": "article", "ref": "https://gameboard.online/when-hyper-casual-grows-up-design-patterns-that-stretch-15-s" }
+    },
+    {
+      "id": "elders", "name": "给长辈玩",
+      "changes": {
+        "text": "字大、话直白，不用英文和符号缩写；按钮上写'开始'不写'GO'",
+        "targets": "能点的东西不小于 56px",
+        "failure": "不限时、不倒计时；错了给明确的文字反馈",
+        "pace": "慢：速度取默认值的 60% 左右",
+        "type": "正文不小于 20px，分数 40px 以上，对比要足",
+        "session": "不限时"
+      },
+      "note": "默认不计时，倒计时会让不想紧张的人直接退出",
+      "source": { "type": "doc", "ref": "https://m2.material.io/design/usability/accessibility.html" }
+    }
+  ],
+  "touchTarget": {
+    "$comment": "所有受众的底线，不是审美。",
+    "android": "不小于 48×48dp，约 9mm",
+    "ios": "不小于 44×44pt",
+    "spacing": "目标之间留 8dp 以上",
+    "source": { "type": "doc", "ref": "https://m2.material.io/design/usability/accessibility.html" }
+  }
+}

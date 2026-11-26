@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>翻对对牌</title>
+<style>
+  /* 方向：hand-drawn 手绘绘本 —— 纸底、暖棕铅笔线、颜色不满边、形状有点歪、翻动像纸片 */
+  :root {
+    --paper: #F6EFE3; --ink: #4A3728; --coral: #E8836B; --leaf: #8FAE6B; --sun: #E8B86D;
+    --font: "Xingkai SC", "Kaiti SC", "STKaiti", "Baoli SC", "PingFang SC", cursive;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body { position: relative; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.7; overflow: hidden; }
+  /* 纸纹：一层很淡的噪点 */
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .29 0 0 0 0 .22 0 0 0 0 .16 0 0 0 .09 0'/></filter><rect width='220' height='220' filter='url(%23p)'/></svg>"); }
+  #app { position: relative; height: 100%; max-width: 430px; margin: 0 auto; display: flex; flex-direction: column; padding: max(16px, env(safe-area-inset-top)) 20px max(16px, env(safe-area-inset-bottom)); }
+
+  h1 { font-size: 40px; font-weight: 400; transform: rotate(-1.5deg); text-align: center; line-height: 1.2; }
+  .lead { text-align: center; margin-top: 4px; }
+
+  /* HUD：三张歪一点的小纸条 */
+  #hud { display: flex; justify-content: center; gap: 12px; margin: 10px 0 14px; font-size: 16px; }
+  .tag { padding: 4px 14px; border: 2px solid var(--ink); background: #fffdf7; transform: rotate(-1deg); }
+  .tag:nth-child(2) { transform: rotate(1.2deg); }
+  .tag:nth-child(3) { transform: rotate(-.6deg); }
+  .tag b { font-size: 20px; font-weight: 400; margin-left: 4px; }
+  .tag.pulse { animation: hop .4s ease-in-out; }
+  @keyframes hop { 50% { transform: rotate(-1deg) translateY(-4px) scale(1.06); } }
+
+  /* 牌：4 列，圆角不对称，描边 2.5px，每张歪一点点 */
+  #board { flex: 1; min-height: 0; display: grid; gap: 14px; grid-template-columns: repeat(4, 1fr); align-content: start; max-width: 380px; gap: 14px; width: 100%; margin: 0 auto; }
+  .card { position: relative; aspect-ratio: 3 / 4; cursor: pointer; perspective: 700px; }
+  .card:nth-child(3n) { transform: rotate(1.4deg); } .card:nth-child(3n+1) { transform: rotate(-1.2deg); } .card:nth-child(4n) { transform: rotate(.6deg); }
+  .inner { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .42s cubic-bezier(.4,.1,.3,1); }
+  .card.open .inner, .card.peek .inner { transform: rotateY(180deg); }
+  .face { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; backface-visibility: hidden; -webkit-backface-visibility: hidden; border: 2.5px solid var(--ink); }
+  /* 牌背：暖棕细斜线 */
+  .back { border-radius: 14px 18px 13px 19px / 18px 13px 19px 14px; background: #FBF5E9 repeating-linear-gradient(135deg, transparent 0 7px, rgba(74,55,40,.22) 7px 8.5px); }
+  /* 牌面 */
+  .front { border-radius: 18px 13px 19px 14px / 13px 19px 14px 18px; background: #fffdf7; transform: rotateY(180deg); }
+  .front svg { width: 68%; height: 68%; }
+  .card.done .inner { animation: settle .5s ease-out forwards; }
+  .card.done .front { border-style: dashed; background: transparent; opacity: .55; }
+  @keyframes settle { 40% { transform: rotateY(180deg) scale(1.12) rotate(3deg); } 100% { transform: rotateY(180deg) scale(1); } }
+  .card.wrong .inner { animation: wobble .3s ease-in-out; }
+  @keyframes wobble { 33% { transform: rotateY(180deg) rotate(-5deg); } 66% { transform: rotateY(180deg) rotate(5deg); } 100% { transform: rotateY(180deg); } }
+  .confetti { position: absolute; width: 8px; height: 8px; border: 1.5px solid var(--ink); pointer-events: none; z-index: 2; }
+
+  /* 面板：像一张贴上去的纸条 */
+  .screen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(246,239,227,.86); }
+  .screen.hidden { display: none; }
+  .panel { width: 100%; max-width: 320px; padding: 26px 22px; background: #fffdf7; border: 2.5px solid var(--ink); border-radius: 20px 14px 22px 15px / 14px 22px 15px 20px; transform: rotate(-.8deg); text-align: center;
+    box-shadow: 4px 5px 0 rgba(74,55,40,.16); }
+  .panel h2 { font-size: 32px; font-weight: 400; }
+  .big { font-size: 44px; line-height: 1.2; margin: 6px 0; }
+  .note { min-height: 1.7em; }
+  .stamp { display: none; margin: 2px auto 0; width: max-content; padding: 2px 12px; border: 2.5px solid var(--coral); border-radius: 50% 46% 52% 48% / 54% 50% 50% 46%; color: var(--coral); transform: rotate(-8deg); font-size: 18px; }
+  .stamp.on { display: block; animation: stamp .35s ease-out; }
+  @keyframes stamp { from { transform: rotate(-8deg) scale(2); opacity: 0; } }
+  button { display: block; width: 100%; margin-top: 18px; padding: 14px; font: 400 20px/1 var(--font); color: var(--ink); background: var(--sun); border: 2.5px solid var(--ink); border-radius: 22px 16px 24px 17px / 16px 24px 17px 22px; cursor: pointer; transition: transform .15s; }
+  button:nth-of-type(2) { background: #fffdf7; }
+  button:active { transform: scale(.96) rotate(-1deg); }
+  .hint { margin-top: 12px; font-size: 16px; opacity: .8; }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>翻对对牌</h1>
+  <p class="lead">翻开两张，一样的就留下。</p>
+
+  <div id="hud" style="display:none">
+    <div class="tag" id="tPairs">配对<b data-sm="score" id="score">0</b></div>
+    <div class="tag" id="tMoves">翻了<b id="moves">0</b>步</div>
+    <div class="tag">最少<b id="best">—</b>步</div>
+  </div>
+
+  <div id="board" aria-live="polite"></div>
+
+  <div class="screen" id="start">
+    <div class="panel">
+      <h2>先看两秒</h2>
+      <p class="note">6 对小图，开局先亮两秒。<br>凭记忆把它们配对，不计时。</p>
+      <button data-sm="start" id="btnStart">开始翻</button>
+    </div>
+  </div>
+
+  <div class="screen hidden" id="over">
+    <div class="panel">
+      <p>这一次用了</p>
+      <div class="big"><span id="final">0</span> 步</div>
+      <div class="stamp" id="stamp">最少步数</div>
+      <p class="note" id="note"></p>
+      <button data-sm="restart" id="btnAgain">再来一局</button>
+      <button id="btnMore" style="display:none">多加两对</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ---- 小图：粗描边，填色故意比描边偏一点点，像没涂满 ----
+  const ST = 'stroke="#4A3728" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"';
+  const ART = {
+    apple: `<g transform="translate(32 32) scale(.88) translate(-32 -32)" fill="#E8836B" stroke="none"><path d="M32 16c-4-6-16-6-20 4-4 11 3 26 12 28 3 1 5-1 8-1s5 2 8 1c9-2 16-17 12-28-4-10-16-10-20-4z"/></g><path ${ST} d="M32 16c-4-6-16-6-20 4-4 11 3 26 12 28 3 1 5-1 8-1s5 2 8 1c9-2 16-17 12-28-4-10-16-10-20-4z"/><path ${ST} d="M32 16c0-4 1-6 3-8"/><path ${ST} fill="#8FAE6B" d="M35 10c6-2 9 1 10 5-5 2-9 0-10-5z"/>`,
+    pear: `<g transform="translate(32 32) scale(.88) translate(-32 -32)" fill="#E8B86D" stroke="none"><path d="M32 14c-2 6-4 9-9 14-6 6-7 15-2 21 6 7 16 7 22 0 5-6 4-15-2-21-5-5-7-8-9-14z"/></g><path ${ST} d="M33 21c-1 6-3 9-9 13-6 5-8 14-3 19 6 6 17 6 23 0 5-5 3-14-3-19-6-4-8-7-8-13z"/><path ${ST} d="M33 21c-1-5 1-8 4-11"/><path ${ST} fill="#8FAE6B" d="M37 11c5-3 9-1 10 3-4 3-9 2-10-3z"/>`,
+    berry: `<g transform="translate(32 32) scale(.88) translate(-32 -32)" fill="#D9776B" stroke="none"><path d="M32 54C20 48 12 38 13 28c1-8 9-11 19-7 10-4 18-1 19 7 1 10-7 20-19 26z"/></g><path ${ST} d="M32 54C20 48 12 38 13 28c1-8 9-11 19-7 10-4 18-1 19 7 1 10-7 20-19 26z"/><path ${ST} fill="#8FAE6B" d="M22 20c6-4 14-4 20 0"/><g fill="#4A3728"><circle cx="24" cy="32" r="1.6"/><circle cx="32" cy="36" r="1.6"/><circle cx="40" cy="32" r="1.6"/><circle cx="28" cy="43" r="1.6"/><circle cx="36" cy="43" r="1.6"/></g>`,
+    mushroom: `<g transform="translate(32 32) scale(.88) translate(-32 -32)" fill="#B5866B" stroke="none"><path d="M12 32c0-12 9-20 20-20s20 8 20 20c-8 3-32 3-40 0z"/></g><path ${ST} d="M12 32c0-12 9-20 20-20s20 8 20 20c-8 3-32 3-40 0z"/><path ${ST} fill="#FFFDF7" d="M26 34c1 8-1 12-2 16 5 2 11 2 16 0-1-4-3-8-2-16"/><g fill="#4A3728"><circle cx="24" cy="25" r="2"/><circle cx="38" cy="21" r="2"/><circle cx="42" cy="28" r="2"/></g>`,
+    leaf: `<g transform="translate(32 32) scale(.88) translate(-32 -32)" fill="#8FAE6B" stroke="none"><path d="M50 14C30 14 16 26 16 44c0 3 1 5 2 7 18 2 32-14 32-37z"/></g><path ${ST} d="M50 14C30 14 16 26 16 44c0 3 1 5 2 7 18 2 32-14 32-37z"/><path ${ST} d="M20 48c8-14 18-24 28-32"/>`,
+    sun: `<g transform="translate(32 32) scale(.88) translate(-32 -32)" fill="#E8B86D" stroke="none"><circle cx="32" cy="32" r="11"/></g><circle ${ST} cx="32" cy="32" r="11"/><path ${ST} d="M32 12v6M32 46v6M12 32h6M46 32h6M18 18l4 4M42 42l4 4M46 18l-4 4M22 42l-4 4"/>`,
+    cup: `<g transform="translate(32 32) scale(.88) translate(-32 -32)" fill="#F3E6CC" stroke="none"><path d="M15 25h32v13c0 9-7 13-16 13s-16-4-16-13z"/></g><path ${ST} d="M15 25h32v13c0 9-7 13-16 13s-16-4-16-13z"/><path ${ST} d="M47 28c8-2 10 4 8 8-1 3-5 5-8 3"/><path ${ST} d="M25 19c-2-3 2-5 0-8M36 19c-2-3 2-5 0-8"/>
+`,
+    star: `<g transform="translate(32 32) scale(.88) translate(-32 -32)" fill="#E8B86D" stroke="none"><path d="M32 12l7 15 16 2-12 11 3 16-14-8-14 8 3-16L9 29l16-2z"/></g><path ${ST} d="M32 12l7 15 16 2-12 11 3 16-14-8-14 8 3-16L9 29l16-2z"/>`,
+  };
+  const $ = (id) => document.getElementById(id);
+  const board = $('board'), hud = $('hud');
+  const BEST = (n) => 'sm-memory-best-' + n;
+  const S = { pairs: 6, score: 0, moves: 0, running: false, lock: true, first: null, unlocked: 6 };
+  let timer = null;
+
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function best() { return +(localStorage.getItem(BEST(S.pairs)) || 0) || null; }
+
+  function build() {
+    board.innerHTML = '';
+    board.style.gridTemplateColumns = `repeat(${S.pairs > 6 ? 4 : 4}, 1fr)`;
+    const names = shuffle(Object.keys(ART)).slice(0, S.pairs);
+    const deck = shuffle([...names, ...names]);
+    deck.forEach((name, i) => {
+      const c = document.createElement('div');
+      c.className = 'card'; c.dataset.name = name; c.style.animation = 'none';
+      c.innerHTML = `<div class="inner"><div class="face back"></div><div class="face front"><svg viewBox="0 0 64 64" aria-hidden="true">${ART[name]}</svg></div></div>`;
+      c.addEventListener('click', () => flip(c));
+      board.appendChild(c);
+    });
+  }
+  function hudUpdate(pulse) {
+    $('score').textContent = S.score; $('moves').textContent = S.moves; $('best').textContent = best() ?? '—';
+    if (pulse) { $('tPairs').classList.remove('pulse'); void $('tPairs').offsetWidth; $('tPairs').classList.add('pulse'); }
+  }
+  function confetti(card) {
+    const r = card.getBoundingClientRect(), colors = ['#E8836B', '#8FAE6B', '#E8B86D'];
+    for (let i = 0; i < 7; i++) {
+      const p = document.createElement('div'); p.className = 'confetti'; p.style.background = colors[i % 3];
+      p.style.left = (r.left + r.width / 2 - 4) + 'px'; p.style.top = (r.top + r.height / 2 - 4) + 'px'; p.style.position = 'fixed';
+      document.body.appendChild(p);
+      const a = Math.random() * Math.PI * 2, d = 34 + Math.random() * 30;
+      p.animate([{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d + 22}px) rotate(${Math.random() * 300 - 150}deg)`, opacity: 0 }], { duration: 650, easing: 'ease-out' }).onfinish = () => p.remove();
+    }
+  }
+
+  function flip(c) {
+    if (S.lock || c.classList.contains('open') || c.classList.contains('done')) return;
+    c.classList.add('open');
+    if (!S.first) { S.first = c; return; }
+    // 第二张：至少停 0.7 秒再盖回，让人看清第二张是什么
+    S.moves++; S.lock = true; hudUpdate();
+    const a = S.first, b = c; S.first = null;
+    if (a.dataset.name === b.dataset.name) {
+      timer = setTimeout(() => {
+        a.classList.add('done'); b.classList.add('done'); confetti(b);
+        S.score++; hudUpdate(true); S.lock = false;
+        if (S.score === S.pairs) finish();
+      }, 380);
+    } else {
+      timer = setTimeout(() => {
+        b.classList.add('wrong');
+        timer = setTimeout(() => { a.classList.remove('open'); b.classList.remove('open', 'wrong'); S.lock = false; }, 320);
+      }, 700);
+    }
+  }
+
+  function start() {
+    clearTimeout(timer);
+    S.score = 0; S.moves = 0; S.first = null; S.running = true;
+    $('over').classList.add('hidden'); $('start').classList.add('hidden'); hud.style.display = 'flex';
+    build(); hudUpdate();
+    // 开局先全亮两秒
+    S.lock = true; board.querySelectorAll('.card').forEach((c) => c.classList.add('peek'));
+    timer = setTimeout(() => { board.querySelectorAll('.card').forEach((c) => c.classList.remove('peek')); S.lock = false; }, 2000);
+  }
+
+  function finish() {
+    S.running = false;
+    const b = best(), isBest = !b || S.moves < b;
+    if (isBest) localStorage.setItem(BEST(S.pairs), S.moves);
+    // 做得好就多给两对，最多 8 对
+    const more = S.pairs < 8 && S.moves <= S.pairs * 2.2;
+    if (more) S.unlocked = Math.max(S.unlocked, S.pairs + 2);
+    timer = setTimeout(() => {
+      $('final').textContent = S.moves;
+      $('stamp').classList.toggle('on', isBest); if (isBest) { $('stamp').classList.remove('on'); void $('stamp').offsetWidth; $('stamp').classList.add('on'); }
+      $('note').textContent = isBest ? '比之前哪一次都少' : `最少的一次是 ${best()} 步`;
+      $('btnMore').style.display = more ? 'block' : 'none';
+      hudUpdate(); $('over').classList.remove('hidden');
+    }, 600);
+  }
+
+  $('btnStart').addEventListener('click', start);
+  $('btnAgain').addEventListener('click', start);
+  $('btnMore').addEventListener('click', () => { S.pairs = Math.min(8, S.pairs + 2); start(); });
+  build();
+
+  // ---- 契约 ----
+  window.__sm = {
+    start,
+    restart: start,
+    getScore: () => S.score,
+    isRunning: () => S.running,
+  };
+})();
+</script>
+</body>
+</html>
