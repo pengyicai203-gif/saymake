@@ -1,0 +1,97 @@
+{
+  "$comment": "H5 小游戏品类的行业惯例。原则：八成的决策不该问用户，直接给默认值。改这里就是在改产品的手感，欢迎 PR。",
+  "category": "h5-mini-game",
+  "version": "0.1.0",
+  "summary": "单文件 HTML 小游戏：打开即玩，手机优先，一局 30 秒到 2 分钟",
+
+  "defaults": {
+    "platform": "手机优先、竖屏；桌面端居中显示，最宽 480px",
+    "tech": "单文件 HTML + 原生 JS；优先用 DOM 元素，粒子/物理/大量对象才用 canvas",
+    "dependencies": "无外部脚本、无外部样式、无字体文件、无网络请求",
+    "controls": "点按/触摸为主，桌面端兼容鼠标；不以键盘作为必需操作",
+    "sessionSeconds": [30, 120],
+    "loop": "开始 → 游玩 → 结束 → 显示成绩 → 一键重开",
+    "difficulty": "随时间或分数递增，三档节奏即可，不做复杂关卡",
+    "feedback": "点中、得分、失败都有即时视觉反馈（动画或颜色变化）",
+    "visual": "大按钮、高对比、正文不小于 16px、系统字体栈；要有主题感，避免通用后台风格",
+    "audio": "默认不加音效；用户提到声音再加",
+    "storage": "默认不保存任何数据；用户提到记录/排行再加 localStorage",
+    "copy": "界面文案用用户的语言，短句，不用感叹号堆砌"
+  },
+
+  "askUser": [
+    {
+      "key": "coreLoop",
+      "alwaysAsk": true,
+      "question": "这个游戏具体是怎么玩的？用一句话说",
+      "note": "这是唯一必须问的。用户说不出就给三个方向让他挑",
+      "fallbackOptions": [
+        "反应类：东西出现就点，比谁快",
+        "躲避类：控制一个角色躲开障碍，活得越久越好",
+        "消除类：把相同的凑在一起消掉"
+      ]
+    },
+    {
+      "key": "theme",
+      "alwaysAsk": false,
+      "question": "主题/画面想是什么感觉？",
+      "options": ["可爱卡通", "简约几何", "复古像素"],
+      "note": "用户那句话里已经有主题（如'泡泡''猫''太空'）就不问"
+    },
+    {
+      "key": "players",
+      "alwaysAsk": false,
+      "question": "是一个人玩，还是两个人轮流比？",
+      "options": ["一个人刷分", "两个人轮流比成绩"],
+      "defaultValue": "一个人刷分"
+    },
+    {
+      "key": "sessionLength",
+      "alwaysAsk": false,
+      "question": "一局大概多长？",
+      "options": ["30 秒，快节奏", "1 分钟左右", "不限时，死了就结束"],
+      "defaultValue": "1 分钟左右"
+    }
+  ],
+
+  "acceptance": {
+    "$comment": "验收器实现的检查项。改这里要同步改 scripts/validate_game.mjs",
+    "static": [
+      { "id": "single-file", "desc": "没有外部脚本、样式或网络资源" },
+      { "id": "viewport", "desc": "有移动端 viewport meta" },
+      { "id": "marker:start", "desc": "开始按钮带 data-sm=\"start\"" },
+      { "id": "marker:score", "desc": "分数元素带 data-sm=\"score\"" },
+      { "id": "marker:restart", "desc": "重开按钮带 data-sm=\"restart\"" },
+      { "id": "script-syntax", "desc": "内联脚本无语法错误" },
+      { "id": "api", "desc": "暴露 window.__sm 的四个方法" },
+      { "id": "no-blocking-dialogs", "desc": "不使用 alert/confirm/prompt/document.write" },
+      { "id": "size", "desc": "文件小于 300 KB" }
+    ],
+    "browser": [
+      { "id": "browser:no-errors", "desc": "加载时控制台无报错" },
+      { "id": "browser:no-overflow", "desc": "手机宽度下无横向溢出" },
+      { "id": "browser:start", "desc": "调用 start() 后游戏进入运行状态" },
+      { "id": "browser:score-number", "desc": "getScore() 返回数字" },
+      { "id": "browser:restart", "desc": "restart() 能重新开始" }
+    ]
+  },
+
+  "contract": {
+    "$comment": "生成器与验收器之间的契约。有了它，验收才是确定性的，修改才能落到具体位置。",
+    "markers": {
+      "start": "data-sm=\"start\"",
+      "score": "data-sm=\"score\"",
+      "restart": "data-sm=\"restart\""
+    },
+    "api": {
+      "object": "window.__sm",
+      "methods": {
+        "start": "() => void  开始一局",
+        "restart": "() => void  重开，等价于 start",
+        "getScore": "() => number  当前分数",
+        "isRunning": "() => boolean  是否进行中"
+      }
+    },
+    "forbidden": ["alert(", "confirm(", "prompt(", "document.write(", "<script src=", "<link href=", "fetch(", "XMLHttpRequest"]
+  }
+}

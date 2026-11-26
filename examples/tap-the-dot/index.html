@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<!--
+  SayMake 示例：点泡泡
+  用户当时说的那句话："我想做一个点泡泡的小游戏，手机上玩，泡泡出现就点。"
+  这个文件同时是验收器的测试样本：它必须始终全部通过。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>点泡泡</title>
+<style>
+  :root { --bg: #1b1f3a; --fg: #fff; --accent: #ffd166; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    overflow: hidden; user-select: none; touch-action: manipulation;
+  }
+  #app { position: relative; height: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; font-size: 18px; font-weight: 600; }
+  #timer { font-variant-numeric: tabular-nums; }
+  #board { position: relative; flex: 1; overflow: hidden; }
+  .dot {
+    position: absolute; width: 64px; height: 64px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.55), transparent 40%), var(--accent);
+    box-shadow: 0 0 24px var(--accent);
+    transform: translate(-50%, -50%);
+    animation: pop .18s ease-out;
+  }
+  @keyframes pop { from { transform: translate(-50%, -50%) scale(.4); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+  .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: rgba(27, 31, 58, .92); text-align: center; padding: 24px; }
+  .overlay h1 { font-size: 32px; }
+  .overlay p { font-size: 16px; opacity: .85; line-height: 1.6; }
+  .btn { min-width: 180px; padding: 16px 28px; border: 0; border-radius: 999px; background: var(--accent); color: #1b1f3a; font-size: 20px; font-weight: 700; cursor: pointer; }
+  .btn:active { transform: scale(.96); }
+  #finalScore { font-size: 56px; font-weight: 800; color: var(--accent); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header><span>得分 <b id="score" data-sm="score">0</b></span><span id="timer">30</span></header>
+  <div id="board">
+    <div id="startScreen" class="overlay">
+      <h1>点泡泡</h1>
+      <p>泡泡出现在哪里，就点哪里。<br>30 秒内点中越多越好。</p>
+      <button class="btn" id="startBtn" data-sm="start">开始</button>
+    </div>
+    <div id="overScreen" class="overlay hidden">
+      <p>时间到！你点中了</p>
+      <div id="finalScore">0</div>
+      <button class="btn" id="restartBtn" data-sm="restart">再来一局</button>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+  const board = document.getElementById('board');
+  const scoreEl = document.getElementById('score');
+  const timerEl = document.getElementById('timer');
+  const startScreen = document.getElementById('startScreen');
+  const overScreen = document.getElementById('overScreen');
+  const finalScore = document.getElementById('finalScore');
+
+  const TOTAL = 30, SIZE = 64, PAD = 8;
+  let score = 0, left = TOTAL, running = false, timer = null, dot = null;
+
+  function spawn() {
+    if (dot) dot.remove();
+    const r = board.getBoundingClientRect();
+    dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.style.left = (PAD + SIZE / 2 + Math.random() * Math.max(1, r.width - SIZE - PAD * 2)) + 'px';
+    dot.style.top = (PAD + SIZE / 2 + Math.random() * Math.max(1, r.height - SIZE - PAD * 2)) + 'px';
+    dot.addEventListener('pointerdown', (e) => { e.preventDefault(); onHit(); });
+    board.appendChild(dot);
+  }
+  function onHit() { if (!running) return; score++; scoreEl.textContent = score; spawn(); }
+  function tick() { left--; timerEl.textContent = left; if (left <= 0) end(); }
+  function start() {
+    score = 0; left = TOTAL; running = true;
+    scoreEl.textContent = '0'; timerEl.textContent = TOTAL;
+    startScreen.classList.add('hidden'); overScreen.classList.add('hidden');
+    clearInterval(timer); timer = setInterval(tick, 1000);
+    spawn();
+  }
+  function end() {
+    running = false; clearInterval(timer);
+    if (dot) dot.remove(); dot = null;
+    finalScore.textContent = score; overScreen.classList.remove('hidden');
+  }
+  function restart() { start(); }
+  function getScore() { return score; }
+  function isRunning() { return running; }
+
+  document.getElementById('startBtn').addEventListener('click', start);
+  document.getElementById('restartBtn').addEventListener('click', restart);
+  window.__sm = { start, restart, getScore, isRunning };
+})();
+</script>
+</body>
+</html>

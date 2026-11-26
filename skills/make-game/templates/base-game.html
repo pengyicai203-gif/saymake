@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!--
+  SayMake 小游戏骨架
+  三段结构：样式区 / 结构区 / 逻辑区。修改时只动对应区块，不要重排其他部分。
+  契约（不能删）：
+    data-sm="start"    开始按钮
+    data-sm="score"    分数显示，初始文本 0
+    data-sm="restart"  重开按钮
+    window.__sm = { start, restart, getScore, isRunning }
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{游戏名}}</title>
+<style>
+  /* ========== 样式区 ========== */
+  :root {
+    --bg: #1b1f3a;
+    --fg: #ffffff;
+    --accent: #ffd166;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    overflow: hidden; user-select: none; touch-action: manipulation;
+  }
+  #app { position: relative; height: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; font-size: 18px; font-weight: 600; }
+  #board { position: relative; flex: 1; overflow: hidden; }
+  .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: rgba(27, 31, 58, .92); text-align: center; padding: 24px; }
+  .overlay h1 { font-size: 32px; }
+  .overlay p { font-size: 16px; opacity: .85; line-height: 1.6; }
+  .btn { min-width: 180px; padding: 16px 28px; border: 0; border-radius: 999px; background: var(--accent); color: #1b1f3a; font-size: 20px; font-weight: 700; cursor: pointer; }
+  .btn:active { transform: scale(.96); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span>得分 <b id="score" data-sm="score">0</b></span>
+    <span id="timer">{{时间}}</span>
+  </header>
+
+  <div id="board">
+    <!-- 游戏元素渲染在这里 -->
+
+    <div id="startScreen" class="overlay">
+      <h1>{{游戏名}}</h1>
+      <p>{{一句话说明怎么玩}}</p>
+      <button class="btn" id="startBtn" data-sm="start">开始</button>
+    </div>
+
+    <div id="overScreen" class="overlay hidden">
+      <p>时间到！你的成绩</p>
+      <div id="finalScore" style="font-size:56px;font-weight:800;color:var(--accent)">0</div>
+      <button class="btn" id="restartBtn" data-sm="restart">再来一局</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ========== 逻辑区 ==========
+  const board = document.getElementById('board');
+  const scoreEl = document.getElementById('score');
+  const timerEl = document.getElementById('timer');
+  const startScreen = document.getElementById('startScreen');
+  const overScreen = document.getElementById('overScreen');
+  const finalScore = document.getElementById('finalScore');
+
+  const TOTAL = 60; // 一局秒数
+  let score = 0, left = TOTAL, running = false, timer = null;
+
+  function reset() {
+    score = 0; left = TOTAL; running = true;
+    scoreEl.textContent = '0'; timerEl.textContent = TOTAL;
+    startScreen.classList.add('hidden'); overScreen.classList.add('hidden');
+  }
+
+  function start() {
+    reset();
+    clearInterval(timer); timer = setInterval(tick, 1000);
+    // TODO: 生成第一个游戏元素
+  }
+
+  function tick() {
+    left--; timerEl.textContent = left;
+    if (left <= 0) end();
+  }
+
+  function onHit() {
+    if (!running) return;
+    score++; scoreEl.textContent = score;
+    // TODO: 下一个游戏元素
+  }
+
+  function end() {
+    running = false; clearInterval(timer);
+    finalScore.textContent = score; overScreen.classList.remove('hidden');
+  }
+
+  function restart() { start(); }
+  function getScore() { return score; }
+  function isRunning() { return running; }
+
+  document.getElementById('startBtn').addEventListener('click', start);
+  document.getElementById('restartBtn').addEventListener('click', restart);
+
+  // 契约：验收器依赖这四个方法
+  window.__sm = { start, restart, getScore, isRunning };
+})();
+</script>
+</body>
+</html>
