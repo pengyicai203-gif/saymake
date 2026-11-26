@@ -33,7 +33,7 @@ function pick(list, id) {
 function printObj(title, o) {
   emit(`# ${title}`);
   for (const [k, v] of Object.entries(o)) {
-    if (k.startsWith('$')) continue;
+    if (k.startsWith('$') || k === 'source') continue;   // 出处网址做游戏用不上，要看出处直接读库文件
     emit(`${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`);
   }
 }
@@ -50,9 +50,9 @@ function byType(id) {
 
 if (cmd === 'list') {
   emit('【审美方向】');
-  for (const d of lib.aesthetics?.directions ?? []) emit(`${d.id}｜${cut(d.feelsLike, 46)}`);
+  for (const d of lib.aesthetics?.directions ?? []) emit(`${d.id}｜${cut(d.feelsLike, 40)}`);
   emit('【玩法】');
-  for (const g of lib.genres?.genres ?? []) emit(`${g.id}｜${cut(g.like, 40)}`);
+  for (const g of lib.genres?.genres ?? []) emit(`${g.id}｜${cut(g.like, 36)}`);
   emit('【机制】');
   emit((lib.mechanics?.patterns ?? []).map((m) => `${m.id}=${m.name}`).join('；'));
   emit('【字体】');

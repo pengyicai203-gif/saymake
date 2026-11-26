@@ -2,3 +2,5 @@ node_modules/
 .saymake/
 .DS_Store
 *.log
+# 每次加载的那一段是按各人自己的规矩生成的，每人不同，不入库
+core/ALWAYS.md

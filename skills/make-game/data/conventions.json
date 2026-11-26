@@ -1,32 +1,17 @@
 {
-  "$comment": "H5 小游戏惯例库 v0.5.0 —— 入口文件。库本体在同目录的几个文件里，由社区持续补充（见 CONTRIBUTING.md）。这不是规则集，是选项库 + 判断指南：模型根据用户的话判断该用哪种审美、哪个玩法、哪些机制、哪种字体、给谁玩；判断不准就带着选项回来问用户。有命令行时用 scripts/library.mjs list / show 按需读，不必整个读完。",
+  "$comment": "H5 小游戏惯例库入口 v0.6.0 —— 每次做游戏必读，控制在 2000 字符以内。判断指南在 guide/ 按需读；库本体用 <m> list / show 按需读。库是选项不是规则，每条带出处，社区可贡献（见 CONTRIBUTING.md）。",
   "category": "h5-mini-game",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "libraries": {
-    "aesthetics": {
-      "file": "aesthetics.json",
-      "note": "16 种视觉方向"
-    },
-    "genres": {
-      "file": "genres.json",
-      "note": "11 个玩法：怎么做、默认数值、难度旋钮"
-    },
-    "mechanics": {
-      "file": "mechanics.json",
-      "note": "21 条机制 + 反模式 + 起步组合"
-    },
-    "typography": {
-      "file": "typography.json",
-      "note": "5 种字体方向"
-    },
-    "audiences": {
-      "file": "audiences.json",
-      "note": "给谁玩，具体改什么"
-    },
-    "cases": {
-      "file": "cases.json",
-      "note": "出厂判断案例；用户自己的案例在经验库"
-    }
+    "aesthetics": "aesthetics.json",
+    "genres": "genres.json",
+    "mechanics": "mechanics.json",
+    "typography": "typography.json",
+    "audiences": "audiences.json",
+    "cases": "cases.json",
+    "signals": "guide/signals.json",
+    "questions": "guide/questions.json",
+    "diagnosis": "guide/diagnosis.json"
   },
   "defaults": {
     "$comment": "用户说'你定/随便'或信息不足时的兜底。不是规则。",
@@ -34,264 +19,20 @@
     "tech": "单文件 HTML + 原生 JS；优先 DOM，粒子/大量对象用 canvas",
     "dependencies": "无外部脚本、样式、字体文件、网络请求",
     "controls": "点按/触摸为主，桌面兼容鼠标；不以键盘为必需",
-    "sessionSeconds": [
-      30,
-      120
-    ],
+    "sessionSeconds": [30, 120],
     "storage": "有刷分/纪录机制时用 localStorage 记最佳；否则不存",
     "audio": "默认不加；用户提到再加",
     "copy": "用用户的语言，短句，和所选审美方向的语气一致（像素游戏可以复古口吻，治愈游戏可以温柔）"
   },
-  "decisionGuide": {
-    "$comment": "怎么判断、判断不准时问什么。",
-    "signals": {
-      "fromUserWords": [
-        "题材词（水果、太空、猫、僵尸）→ 决定素材和部分审美",
-        "玩法词（接东西、打砖块、躲、跳、配对、答题、合成、翻牌）→ 映射到 genres；没说玩法就从 genres 挑三个问他",
-        "情绪词（治愈、酷、搞笑、紧张、怀旧、简约、真实）→ 直接映射到 aesthetics",
-        "年代/参考词（复古、像素、小时候、红白机、Y2K、像某某游戏）→ 映射到对应审美，哪怕它'过时'",
-        "质感词（更真实、简单点、花哨点、暖一点）→ 决定 assets 的画法和 palette 的复杂度",
-        "受众词（给小孩、给朋友、给自己、给长辈）→ 决定难度、字号、表达方式",
-        "场景词（打发时间、聚会、睡前、通勤）→ 决定节奏与一局时长",
-        "意义词（破纪录、放松、和朋友比）→ 决定机制组合，可以叠加",
-        "否定词（不要花哨、别太幼稚、不要暗色）→ 排除法，优先级高于其他信号"
-      ],
-      "whenSignalsConflict": "否定词 > 参考/年代词 > 质感词 > 情绪词 > 题材词。冲突明显时（'可爱但不要太幼稚'）用一句话复述你的取舍，让用户确认",
-      "whenNoSignal": "默认 modern-casual + byGameType 起步组合；但在第一稿给出时附带'如果想要别的感觉，可以换成 A/B/C'，让用户低成本改方向",
-      "whenUnsure": "两个方向拿不准，就问。问题必须给两个具体的、带画面描述的选项，而不是'你想要什么风格'",
-      "whenLibraryHasGap": "用户的感觉在库里找不到对应方向时：自己合成一个（见 aesthetics.custom），做出来给用户看；如果用户认可，把它加回库里并标 source.type = 'dogfood'。库的每一次缺口都该变成一条新条目"
-    },
-    "questionBank": {
-      "$comment": "问题设计原则：帮用户从模糊到有画面。每个选项都是一幅具体的画面，5 秒内能选。不问技术问题。",
-      "gameplay": {
-        "question": "想玩哪一种？",
-        "optionsFrom": "genres.genres[*].like",
-        "when": "用户没有说玩法，只说'做个小游戏'。挑三个差异大的（比如一个接的、一个点的、一个配对的），用 like 描述；最后加一句'或者直接说你想怎么玩'",
-        "note": "用户已经有玩法（说了'接水果''打砖块'）就不要问"
-      },
-      "picture": {
-        "question": "你想让它看起来更像哪一种？",
-        "optionsFrom": "aesthetics.directions[*].feelsLike",
-        "when": "画面感缺失，或两个方向拿不准。选项挑反差大的三个，并在最后加一句'都不像就直接描述给我'",
-        "note": "用户答'都不像'时，追问一句质感词：'更真实一点？更简单一点？更暖一点？'——这比再给三个方向有效"
-      },
-      "reference": {
-        "question": "有没有玩过哪个游戏或 App，让你觉得'就是这种感觉'？",
-        "when": "用户词穷、说不清；一个参考物比十个形容词有用"
-      },
-      "audience": {
-        "question": "主要给谁玩？",
-        "options": [
-          "给自己打发时间",
-          "给小孩玩",
-          "朋友聚会轮流玩",
-          "给长辈玩"
-        ],
-        "when": "难度、字号、表达方式的依据缺失",
-        "note": "选了之后必须按 audiences.json 里对应的 changes 改：文字、点按目标大小、失败处理、节奏、字号、一局时长。不改等于没问"
-      },
-      "pace": {
-        "question": "想要哪种节奏？",
-        "options": [
-          "快、刺激、几秒一局",
-          "中等，一分钟能玩一局",
-          "慢、放松、没有失败"
-        ],
-        "when": "机制选择（倒计时/生命/无限模式）的依据缺失"
-      },
-      "meaning": {
-        "question": "玩完一局，你最想看到什么？",
-        "options": [
-          "分数破纪录",
-          "放松了、解压了",
-          "朋友间比一比",
-          "看到角色的故事往下走"
-        ],
-        "when": "留存机制选择的依据缺失。可以多选，多选就叠加机制",
-        "multi": true
-      },
-      "exclude": {
-        "question": "有没有肯定不要的？",
-        "options": [
-          "不要太花哨",
-          "不要太幼稚",
-          "不要太暗",
-          "不要太难"
-        ],
-        "when": "第一稿方向偏了，用排除法最快"
-      }
-    },
-    "askingBudget": {
-      "rule": "每个检查点最多 3 个问题；整个过程通常 3–6 个。用户说'你定/随便/开始做'立刻按默认走。问的每一个问题都必须在下一稿里看得见变化——否则用户会觉得白答了",
-      "loweringCost": "让提问门槛越来越低的办法：① 选项永远是画面，不是术语 ② 能多选就多选 ③ 先给一稿再问，比空着问容易答 ④ 用户答'都不像'时，用质感词追问一次，不要重新列一遍方向",
-      "checkpoints": [
-        "开工前：方向",
-        "第一稿后：对不对",
-        "每次修改后：是不是这个意思"
-      ]
-    },
-    "diagnosis": {
-      "$comment": "用户说'太丑/不好玩/没意思'时的诊断清单。先自己看截图找原因，再带着判断回来问。",
-      "ugly": {
-        "causes": [
-          {
-            "id": "wrong-direction",
-            "name": "方向错了",
-            "how": "做成了可爱，用户想要酷；做成了现代，用户想要复古。画面本身没问题，气质不对",
-            "fix": "给 aesthetics 里反差大的两三个方向当选项"
-          },
-          {
-            "id": "rough-assets",
-            "name": "主角画得糙",
-            "how": "SVG 缺高光、缺层次、比例不对，像占位图",
-            "fix": "按所选方向的 assets 配方重画主角，先只画一个给用户看"
-          },
-          {
-            "id": "muddy-color",
-            "name": "配色土",
-            "how": "饱和度全拉满、或对比不够、或渐变方向俗",
-            "fix": "换该方向的 palette，整体只保留一个强调色"
-          },
-          {
-            "id": "busy-background",
-            "name": "背景太吵",
-            "how": "光斑、纹理、渐变太多，主角被淹没",
-            "fix": "背景降到一两种颜色，让主角的质感和光影说话（见 realistic-clean）"
-          },
-          {
-            "id": "weak-type",
-            "name": "字太弱",
-            "how": "字号小、字重轻、没有层级",
-            "fix": "按 typography 方向重设：标题/分数/正文三级"
-          },
-          {
-            "id": "empty-layout",
-            "name": "画面空",
-            "how": "留白过多、主角小、没有焦点",
-            "fix": "主角放大到屏宽 1/6–1/5，加环境元素（背景层次、地面、光）"
-          },
-          {
-            "id": "no-motion",
-            "name": "没有动效",
-            "how": "东西瞬间出现消失，像 PPT",
-            "fix": "按所选方向的 motion 加出现/命中/过渡动画"
-          }
-        ],
-        "ask": "我看了截图，觉得问题可能在：① 方向（现在是 X 感觉）② 主角画法 ③ 背景/配色。你看着最别扭的是哪个？或者直接说想要更像 A 还是 B。"
-      },
-      "boring": {
-        "causes": [
-          {
-            "id": "no-goal",
-            "name": "没有目标",
-            "how": "玩着玩着不知道为了什么",
-            "fix": "从 mechanics 里加目标类：goals、best-record、phases、unlock"
-          },
-          {
-            "id": "no-feedback",
-            "name": "没反馈",
-            "how": "接住了没感觉，漏掉了也没感觉",
-            "fix": "加 juice：粒子、飘字、回弹、音效（如允许）"
-          },
-          {
-            "id": "flat-difficulty",
-            "name": "节奏平",
-            "how": "从头到尾一个速度",
-            "fix": "加 warm-up 曲线或 phases"
-          },
-          {
-            "id": "too-easy-or-hard",
-            "name": "太简单或太难",
-            "how": "看一局数据：分数分布、存活时间",
-            "fix": "调速度/密度/判定范围，一次只调一个变量"
-          },
-          {
-            "id": "no-tension",
-            "name": "没有取舍",
-            "how": "没有'要不要冒险'的瞬间",
-            "fix": "加 risk-choice：稀有目标、炸弹旁边的高分"
-          },
-          {
-            "id": "friction",
-            "name": "重开有摩擦",
-            "how": "结束后要点好几下才能再来",
-            "fix": "fast-restart：一个大按钮直达"
-          },
-          {
-            "id": "theme-flat",
-            "name": "题材没感",
-            "how": "机制对但主题不吸引这个人",
-            "fix": "问用户喜欢什么题材，换皮不换机制"
-          }
-        ],
-        "ask": "我猜是：① 玩着没有目标 ② 接住了没感觉 ③ 节奏太平。你觉得最接近哪个？"
-      }
-    },
-    "memory": {
-      "$comment": "经验库在 ~/.saymake/memory/，跨项目。开工前 node scripts/log.mjs recall --brief \"用户的话\"。",
-      "rule": [
-        "recall 的结果先读，再做判断。这个用户之前说过的偏好、做过的项目、踩过的坑，都算信号。",
-        "相似的案例优先看结果：偏了的案例告诉你别怎么做，命中的告诉你为什么这样做对。",
-        "偏好和这次的话冲突时，以这次的话为准，并把偏好更新（旧的忘掉）。"
-      ],
-      "whenNoMemory": "第一次用、或 recall 为空：照常判断。做完后把偏好和坑写回去，下次才有"
-    }
-  },
   "acceptance": {
-    "$comment": "脚本验的 + 模型看截图验的。",
-    "static": [
-      "single-file",
-      "viewport",
-      "marker:start",
-      "marker:score",
-      "marker:restart",
-      "script-syntax",
-      "api",
-      "no-blocking-dialogs",
-      "size"
-    ],
-    "browser": [
-      "no-errors",
-      "no-overflow",
-      "start",
-      "score-number",
-      "restart"
-    ],
-    "model_self_check": {
-      "$comment": "对照的是所选方向的标准，不是通用标准。每一条都要写下来看到了什么（node scripts/log.mjs selfcheck），没写不能交付。",
-      "visual": [
-        "像不像所选方向 feelsLike 描述的那种感觉？不像就改",
-        "有没有掉进该方向的 pitfalls？",
-        "字有三级了吗？分数够大够粗吗？有视觉焦点吗？",
-        "主体够大吗（主角不小于屏宽 1/6）？"
-      ],
-      "feel": [
-        "所选的每个机制都在画面上看得见吗？（连击有没有显示、阶段变化有没有感知）",
-        "结算页有'再来一局'的理由吗？重开是否一触即达？",
-        "玩一分钟会不会想再来一局？如果不会，缺的是 mechanics 里的哪一个？"
-      ]
-    }
+    "$comment": "脚本验能跑；对不对靠看截图，标准是所选方向的 feelsLike（SKILL.md 第 5 步）。",
+    "static": ["single-file", "viewport", "marker:start", "marker:score", "marker:restart", "script-syntax", "api", "no-blocking-dialogs", "size"],
+    "browser": ["no-errors", "no-overflow", "start", "score-number", "restart"]
   },
   "contract": {
     "$comment": "契约不是审美，是验收器依赖的硬约定。",
-    "markers": {
-      "start": "data-sm=\"start\"",
-      "score": "data-sm=\"score\"",
-      "restart": "data-sm=\"restart\""
-    },
-    "api": {
-      "object": "window.__sm",
-      "methods": {
-        "start": "() => void",
-        "restart": "() => void",
-        "getScore": "() => number",
-        "isRunning": "() => boolean"
-      }
-    },
-    "hard_rules": [
-      "单文件、无外部资源、无网络请求",
-      "不用 alert/confirm/prompt",
-      "正文不小于 16px（可读性底线）"
-    ]
+    "markers": { "start": "data-sm=\"start\"", "score": "data-sm=\"score\"", "restart": "data-sm=\"restart\"" },
+    "api": { "object": "window.__sm", "methods": { "start": "() => void", "restart": "() => void", "getScore": "() => number", "isRunning": "() => boolean" } },
+    "hard_rules": ["单文件、无外部资源、无网络请求", "不用 alert/confirm/prompt", "正文不小于 16px（可读性底线）"]
   }
 }

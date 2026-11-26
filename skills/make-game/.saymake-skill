@@ -1,0 +1,1 @@
+这个 skill 由 SayMake 安装器管理（记号文件）。升级：在仓库里 git pull 后重新运行 bash install.sh。卸载：bash install.sh --uninstall，或直接删掉这个目录。

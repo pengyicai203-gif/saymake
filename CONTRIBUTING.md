@@ -23,7 +23,12 @@ SayMake 的代码不多，真正值钱的是**惯例库**：做过很多游戏�
 | `genres.json` | 玩法：被验证过的核心循环 | `like`（像什么游戏）、`oneLine`（动词 + 失败条件 + 计分）、`build`（怎么做）、`defaults`（默认数值）、`dials`（难度调哪几个旋钮）、`mechanics`、`audiences`、`pitfalls`、`source` |
 | `audiences.json` | 受众：给谁玩，具体改什么 | `changes`（文字 / 点按目标大小 / 失败处理 / 节奏 / 字号 / 一局时长）、`note`、`source` |
 | `cases.json` | 出厂判断案例 | `brief`（用户原话）、`signals`、`chose`、`why`、`asked`、`outcome`（`hit` / `miss`）、`feedback`、`lesson`。必须是真实对话；用户没确认的结果不要写成 `hit` |
-| `conventions.json` | 入口：默认值、判断指南、问题库、诊断清单、验收与契约 | — |
+| `conventions.json` | 入口：默认值、验收项与契约、库的索引。每次做游戏必读，**总量控制在 2000 字符以内** | — |
+| `guide/signals.json` | 判断指南：从用户的话里提哪些信号、冲突时谁优先、拿不准怎么办 | — |
+| `guide/questions.json` | 问题库与提问预算。只在要提问时读 | — |
+| `guide/diagnosis.json` | 用户说"太丑 / 不好玩"时的原因清单和问法。只在那时读 | — |
+
+入口文件和协议（`SKILL.md`）是每次都要读的，加内容前先想清楚能不能放到按需读的文件里。判断指南在协议里对应两份说明：`references/asking.md`（要提问时）和 `references/revising.md`（要修改时）。
 
 **玩法库最需要有实战经验的人。** 现在 11 个玩法里只有 4 个在 SayMake 里实测过（接住掉落物、打砖块、点目标、翻牌记忆），其余的"怎么做"和默认数值是摸索出来的，标了 `internal`。你做过其中任何一种，欢迎按真实数值修正。
 
@@ -78,11 +83,34 @@ node skills/make-game/scripts/check_library.mjs
 node skills/make-game/scripts/validate_game.mjs examples/<名字>/index.html --browser
 ```
 
+改了记忆内核（`skills/saymake/`）、安装器（`core/`）或协议的话，再跑两套自动测试。它们只用临时目录，不碰你真实的记忆库和 AI 工具配置：
+
+```bash
+node tests/memory.test.mjs "$PWD"    # 项目流程、跨项目带出经验、候选要点头、读取量
+node tests/install.test.mjs "$PWD"   # 装、重复装、同步、自检、撤销
+```
+
+## 仓库结构
+
+```
+install.sh                 一条命令安装：认出本机的 AI 工具，把下面两样放到位
+core/install.mjs           安装器本体（可 --dry-run、--uninstall）
+skills/saymake/            记忆内核：规矩、偏好、案例、踩过的坑，跨项目、跟着用户走
+skills/make-game/          第一个干活 skill：H5 小游戏
+examples/                  用 SayMake 做出来的例子
+docs/                      设计说明、实测记录、测试记录
+tests/                     自动测试
+```
+
+## 加一个新的干活 skill
+
+在 `skills/<名字>/` 里放 `SKILL.md`（协议，**每次都读，控制在 3000 字符以内**）、`data/`（按需读的库）、`scripts/`。规矩：开工先 `recall`，收尾把偏好和坑 `remember`、规矩和惯例 `propose`；要记读取量就像 make-game 那样提供一个入口脚本，调用 `skills/saymake/scripts/log.mjs`。先开一个 issue 讨论要不要加。
+
 PR 描述里写三件事：这条惯例解决什么问题、什么时候它是错的、出处是什么。
 
 ## 加一个新的品类
 
-现在只有 `h5-mini-game` 一个品类。要加第二个（落地页、小工具……），做法是复制一套 `data/`，写它自己的惯例和验收项，而不是往小游戏库里塞。先开一个 issue 讨论品类边界。
+小游戏库里现在只有 `h5-mini-game` 一个品类。要加第二个品类（落地页、小工具……），按上一节加一个新的干活 skill，写它自己的惯例和验收项，而不是往小游戏库里塞。先开一个 issue 讨论品类边界。
 
 ## 行为准则
 
