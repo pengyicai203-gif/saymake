@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <!--
-  SayMake 小游戏骨架（视觉标准见 data/conventions.json → visual）
+  SayMake 小游戏骨架（现代休闲方向的样式；其他方向见 data/conventions.json → aesthetics，
+  像素复古另有 templates/pixel-retro.html）。模板只提供结构和契约，样式区按选定方向重写。
   三段结构：样式区 / 结构区 / 逻辑区。修改时只动对应区块，不要重排其他部分。
   契约（不能删）：
     data-sm="start"    开始按钮
     data-sm="score"    分数显示，初始文本 0
     data-sm="restart"  重开按钮
     window.__sm = { start, restart, getScore, isRunning }
-  主角用内联 SVG 画，不用 emoji。
 -->
 <html lang="zh-CN">
 <head>
